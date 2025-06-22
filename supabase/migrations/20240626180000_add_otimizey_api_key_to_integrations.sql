@@ -1,0 +1,1 @@
+alter table public.integrations add column if not exists otimizey_api_key text; 

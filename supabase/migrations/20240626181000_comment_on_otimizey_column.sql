@@ -1,0 +1,1 @@
+COMMENT ON COLUMN public.integrations.otimizey_api_key IS 'Armazena a chave de API para a integração com a Otimizey'; 
