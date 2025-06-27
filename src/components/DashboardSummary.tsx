@@ -104,7 +104,7 @@ const DateRangeSelector = ({ startDate, endDate, onChange }: { startDate: Date; 
         onChange={onChange}
         dateFormat="dd 'de' MMM 'de' yyyy"
         locale="pt-BR"
-        customInput={<CustomInput startDate={startDate} endDate={endDate} />}
+        customInput={<CustomInput />}
         calendarClassName="date-range-calendar"
       />
     </div>
