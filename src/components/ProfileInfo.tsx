@@ -1,4 +1,3 @@
-import { useUser } from '../hooks/useUser';
 import { supabase } from '../lib/supabaseClient';
 import { toast } from 'react-hot-toast';
 import { User, Mail, Calendar, KeyRound, Save } from 'lucide-react';

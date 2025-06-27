@@ -4,6 +4,13 @@ import { supabase } from '../../lib/supabaseClient';
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '../../context/AuthContext';
 
+declare global {
+  interface Window {
+    fbq: any;
+    _fbq?: any;
+  }
+}
+
 export default function CheckoutPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -96,7 +103,7 @@ export default function CheckoutPage() {
     if (!pixelId || !product) return;
     // Evita injetar múltiplas vezes
     if (document.getElementById('fb-pixel-script')) return;
-    !(function(f,b,e,v,n,t,s)
+    (function(f,b,e,v,n,t,s)
     {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
     n.callMethod.apply(n,arguments):n.queue.push(arguments)};
     if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';

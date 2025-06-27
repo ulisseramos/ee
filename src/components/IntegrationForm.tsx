@@ -58,7 +58,7 @@ export default function IntegrationForm() {
     // Salva chave PushinPay no Supabase
     const { error } = await supabase
       .from('integrations')
-      .upsert({ user_id: user.id, pushinpay_api_key: apiKey, api_token: apiKey, is_active: active, provider: 'pushinpay' }, { onConflict: ['user_id', 'provider'] });
+      .upsert({ user_id: user.id, pushinpay_api_key: apiKey, api_token: apiKey, is_active: active, provider: 'pushinpay' }, { onConflict: 'user_id' });
     if (error) setMessage(error.message);
     else {
       setMessage('Chave salva!');
@@ -73,7 +73,7 @@ export default function IntegrationForm() {
     // Salva pixel_id em provider: 'facebook_pixel', preenchendo api_token com string vazia
     const { error } = await supabase
       .from('integrations')
-      .upsert({ user_id: user.id, provider: 'facebook_pixel', pixel_id: pixelId, api_token: '', }, { onConflict: ['user_id', 'provider'] });
+      .upsert({ user_id: user.id, provider: 'facebook_pixel', pixel_id: pixelId, api_token: '', }, { onConflict: 'user_id' });
     if (error) setPixelMsg(error.message);
     else setPixelMsg('Pixel salvo!');
     setPixelLoading(false);

@@ -112,7 +112,10 @@ const DateRangeSelector = ({ startDate, endDate, onChange }: { startDate: Date; 
 };
 
 // Custom input para exibir o intervalo no padrão do painel
-const CustomInput = React.forwardRef(({ value, onClick }, ref) => (
+const CustomInput = React.forwardRef<
+  HTMLButtonElement,
+  { value?: string; onClick?: () => void }
+>(({ value, onClick }, ref) => (
   <button
     onClick={onClick}
     ref={ref}

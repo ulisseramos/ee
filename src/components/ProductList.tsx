@@ -56,9 +56,9 @@ const ProductRow = ({ product, onDeleteProduct }) => {
       </td>
       <td style={{ padding: '0.9rem 0.7rem', textAlign: 'center' }}>
         {product.active ? (
-          <CheckCircle2 size={18} style={{ color: '#22C55E' }} title="Ativo" />
+          <CheckCircle2 size={18} style={{ color: '#22C55E' }}  />
         ) : (
-          <XCircle size={18} style={{ color: '#fbbf24' }} title="Inativo" />
+          <XCircle size={18} style={{ color: '#fbbf24' }} />
         )}
       </td>
       <td style={{ padding: '0.9rem 0.7rem', textAlign: 'center' }}>

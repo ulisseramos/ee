@@ -188,7 +188,6 @@ const DashboardPage = () => {
     plugins: { legend: { display: false } },
     elements: {
       line: {
-        borderJoinStyle: 'round',
         capBezierPoints: true,
       },
       point: {

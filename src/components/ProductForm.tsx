@@ -1,6 +1,8 @@
 import { useForm } from 'react-hook-form';
 import { useState, useRef } from 'react';
 import { X, PackagePlus, UploadCloud } from 'lucide-react';
+import { supabase } from '../lib/supabaseClient';
+import { useAuth } from '../context/AuthContext';
 
 const CATEGORIES = [
   'Cursos',
@@ -10,10 +12,12 @@ const CATEGORIES = [
   'Outro',
 ];
 
-export default function ProductForm({ onProductCreated = () => {}, onCancel = () => {} }) {
+export default function ProductForm({ onProductCreated = () => { }, onCancel = () => { } }) {
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm();
   const [imagePreview, setImagePreview] = useState(null);
-  const fileInputRef = useRef();
+  const fileInputRef = useRef(null);
+  const { user } = useAuth();
+  const [errorMsg, setErrorMsg] = useState('');
 
   function handleImageChange(e) {
     const file = e.target.files[0];
@@ -30,8 +34,27 @@ export default function ProductForm({ onProductCreated = () => {}, onCancel = ()
     }
   }
 
-  function onSubmit(data) {
-    // Aqui você pode implementar o envio real
+  async function onSubmit(data) {
+    setErrorMsg('');
+    if (!user) {
+      setErrorMsg('Usuário não autenticado.');
+      return;
+    }
+    // Remover category do objeto enviado
+    const { category, ...rest } = data;
+    const productData = {
+      ...rest,
+      user_id: user.id,
+      // Se quiser salvar a categoria, pode concatenar na descrição:
+      // description: `[${category}] ${data.description || ''}`,
+    };
+    const { error } = await supabase
+      .from('products')
+      .insert([productData]);
+    if (error) {
+      setErrorMsg('Erro ao criar produto: ' + error.message);
+      return;
+    }
     onProductCreated();
   }
 
@@ -221,7 +244,9 @@ export default function ProductForm({ onProductCreated = () => {}, onCancel = ()
                     }}
                     placeholder="Ex: Ebook de Receitas"
                   />
-                  {errors.name && <p style={{ color: '#F87171', fontSize: 13, marginTop: 4 }}>{errors.name.message}</p>}
+                  {typeof errors.name?.message === 'string' && (
+                    <p style={{ color: '#F87171', fontSize: 13, marginTop: 4 }}>{errors.name.message}</p>
+                  )}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                   <div>
@@ -244,7 +269,9 @@ export default function ProductForm({ onProductCreated = () => {}, onCancel = ()
                       <option value="" disabled>Selecione a categoria</option>
                       {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                     </select>
-                    {errors.category && <p style={{ color: '#F87171', fontSize: 13, marginTop: 4 }}>{errors.category.message}</p>}
+                    {typeof errors.category?.message === 'string' && (
+                    <p style={{ color: '#F87171', fontSize: 13, marginTop: 4 }}>{errors.category.message}</p>
+                  )}
                   </div>
                   <div>
                     <label style={{ color: '#A78BFA', fontWeight: 600, fontSize: 15 }}>Preço</label>
@@ -265,7 +292,9 @@ export default function ProductForm({ onProductCreated = () => {}, onCancel = ()
                       }}
                       placeholder="29.90"
                     />
-                    {errors.price && <p style={{ color: '#F87171', fontSize: 13, marginTop: 4 }}>{errors.price.message}</p>}
+                    {typeof errors.price?.message === 'string' && (
+                    <p style={{ color: '#F87171', fontSize: 13, marginTop: 4 }}>{errors.price.message}</p>
+                  )}
                   </div>
                 </div>
                 <div>
@@ -292,6 +321,11 @@ export default function ProductForm({ onProductCreated = () => {}, onCancel = ()
               </div>
             </div>
           </div>
+          {errorMsg && (
+            <div style={{ color: '#F87171', background: '#1B0C37', border: '1px solid #7E22CE', borderRadius: 8, padding: 12, marginBottom: 16, textAlign: 'center' }}>
+              {errorMsg}
+            </div>
+          )}
           {/* Botões */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24, paddingTop: 24 }}>
             <button
@@ -320,16 +354,16 @@ export default function ProductForm({ onProductCreated = () => {}, onCancel = ()
             <button
               type="submit"
               disabled={isSubmitting}
-              style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
+              style={{
+                display: 'flex',
+                alignItems: 'center',
                 gap: 8,
-                backgroundColor: '#1B0C37', 
-                color: 'white', 
-                fontWeight: 'bold', 
+                backgroundColor: '#1B0C37',
+                color: 'white',
+                fontWeight: 'bold',
                 padding: '0.75rem 1.5rem',
                 borderRadius: 10,
-                border: 'none', 
+                border: 'none',
                 cursor: 'pointer',
                 opacity: isSubmitting ? 0.5 : 1,
                 fontSize: 16,
