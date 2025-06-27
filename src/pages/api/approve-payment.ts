@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@supabase/supabase-js';
-import { sendUtmfyWebhook } from '../../lib/utmfWebhook';
+// import { sendUtmfyWebhook } from '../../lib/utmfWebhook'; // Removido pois não existe mais
 
 // Esta API usa a CHAVE DE SERVIÇO para ter permissão de administrador
 // e atualizar qualquer registro no banco de dados.
@@ -9,7 +9,13 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_KEY!
 );
 
+const ADMIN_SECRET = process.env.ADMIN_SECRET;
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.headers['x-admin-secret'] !== ADMIN_SECRET) {
+    return res.status(403).json({ error: 'Acesso negado' });
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método não permitido' });
   }
@@ -45,19 +51,74 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .eq('user_id', venda.user_id)
         .single();
       if (integracao?.utmfy_api_key) {
-        await sendUtmfyWebhook({
-          webhookUrl: integracao.utmfy_api_key,
-          event: 'venda_aprovada',
-          sale: {
-            id: venda.id,
-            nome: venda.nome,
+        // Monta o payload no formato Disrupty
+        const payload = {
+          hash: venda.id,
+          customer: {
+            name: venda.nome,
             email: venda.email,
-            telefone: venda.telefone,
-            price: venda.price,
-            status: venda.status,
-            created_at: venda.created_at,
+            phone_number: venda.telefone,
+            zip_code: venda.cep || '',
+            street_name: venda.rua || '',
+            number: venda.numero || '',
+            complement: venda.complemento || '',
+            neighborhood: venda.bairro || '',
+            city: venda.cidade || '',
+            state: venda.estado || '',
           },
-        });
+          producer: {
+            hash: 'produtor-hash',
+            name: 'Produtor',
+            document: '00000000000',
+            recipient_type: 'individual',
+          },
+          offer: {
+            hash: 'oferta-hash',
+            title: venda.product_name || 'Produto',
+            price: Math.round((venda.price || 0) * 100),
+            url: 'https://seusite.com/oferta',
+            status: 1,
+          },
+          product: {
+            hash: 'produto-hash',
+            title: venda.product_name || 'Produto',
+            cover: '',
+            product_type: 'digital',
+            guaranted_days: '30',
+            sale_page: '',
+            offers: [],
+            status: 1,
+          },
+          balance: null,
+          payment_method: venda.payment_method || 'credit_card',
+          payment_status: 'paid',
+          installments: venda.installments || 1,
+          pix: null,
+          billet: null,
+          amount: Math.round((venda.price || 0) * 100),
+          amount_liquid: Math.round((venda.price || 0) * 90),
+          transaction: venda.id,
+          postback_url: integracao.utmfy_api_key,
+          utm_source: venda.utm_source || '',
+          utm_campaign: venda.utm_campaign || '',
+          utm_content: venda.utm_content || '',
+          utm_term: venda.utm_term || '',
+          utm_medium: venda.utm_medium || '',
+          created_at: venda.created_at,
+          updated_at: new Date().toISOString(),
+        };
+        // Envia o webhook para a UTMFY
+        try {
+          const resp = await fetch(integracao.utmfy_api_key, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          const respData = await resp.text();
+          console.log('[UTMFY] Webhook Disrupty enviado:', resp.status, respData);
+        } catch (err) {
+          console.error('[UTMFY] Falha ao enviar webhook Disrupty:', err);
+        }
       }
     }
 

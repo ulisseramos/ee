@@ -1,3 +1,4 @@
+import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { supabase } from '../lib/supabaseClient';
@@ -35,6 +36,7 @@ const NavLink = ({ href, label, icon: Icon }) => {
         fontWeight: isActive ? '600' : '400',
         position: 'relative',
         transition: 'all 0.2s ease-in-out',
+        textDecoration: 'none',
       }}>
         {isActive && (
           <span style={{
@@ -47,7 +49,7 @@ const NavLink = ({ href, label, icon: Icon }) => {
             borderRadius: '0 9999px 9999px 0',
           }}></span>
         )}
-        <Icon size={20} style={{ marginRight: '1rem' }} />
+        <Icon size={28} color={isActive ? '#fff' : '#A1A1AA'} style={{ marginRight: '1rem' }} />
         <span>{label}</span>
       </a>
     </Link>
@@ -64,13 +66,17 @@ const Sidebar = () => {
 
   return (
     <aside style={{
-      width: '280px',
+      position: 'fixed',
+      top: 0,
+      left: 0,
       height: '100vh',
+      zIndex: 1100,
+      width: 240,
       backgroundColor: '#030712',
       borderRight: '1px solid #0E0725',
       display: 'flex',
       flexDirection: 'column',
-      padding: '1.5rem 1rem'
+      padding: '2rem 1.5rem'
     }}>
       <div style={{ display: 'flex', alignItems: 'center', padding: '0 0.5rem 1.5rem 0.5rem' }}>
         <div style={{
@@ -94,7 +100,15 @@ const Sidebar = () => {
         ))}
       </nav>
 
-      <div>
+      <div style={{
+        position: 'absolute',
+        left: 0,
+        bottom: 80,
+        width: '100%',
+        background: 'inherit',
+        zIndex: 1200,
+        padding: 0,
+      }}>
         <div style={{ borderTop: '1px solid #0E0725', margin: '0.5rem 0' }}></div>
         <NavLink href="/perfil" label="Minha Conta" icon={User} />
         <a onClick={handleLogout} style={{

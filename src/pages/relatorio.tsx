@@ -1,7 +1,10 @@
 import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
-import { FaSearch, FaCheck, FaHourglassHalf, FaPercentage, FaDollarSign, FaSyncAlt, FaChevronDown, FaCalendarAlt, FaCreditCard, FaBoxOpen, FaUser, FaTag } from 'react-icons/fa';
+import { FaSearch, FaCheck, FaHourglassHalf, FaPercentage, FaDollarSign, FaSyncAlt, FaChevronDown, FaCalendarAlt, FaCreditCard, FaBoxOpen, FaUser, FaTag, FaCheckCircle } from 'react-icons/fa';
+import { SiPix } from 'react-icons/si';
+import DashboardSummary from '../components/DashboardSummary';
+import { useRouter } from 'next/router';
 
 interface Sale {
   id: string;
@@ -50,8 +53,50 @@ const summaryCards = [
   },
 ];
 
+interface RelatorioSummaryCardProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
+  subtext: string;
+}
+
+const RelatorioSummaryCard: React.FC<RelatorioSummaryCardProps> = ({ icon, label, value, subtext }) => (
+  <div
+    style={{
+      backgroundColor: '#030712',
+      border: '1px solid #1A0938',
+      borderRadius: '0.75rem',
+      padding: '1.5rem',
+      flex: '1 1 220px',
+      minWidth: 180,
+      maxWidth: 320,
+      width: '100%',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '1rem',
+      boxSizing: 'border-box',
+    }}
+  >
+    <div style={{ color: '#8b5cf6' }}>
+      {icon}
+    </div>
+    <div>
+      <div style={{ color: '#d1d5db', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.25rem' }}>
+        {label}
+      </div>
+      <div style={{ color: 'white', fontSize: '1.875rem', fontWeight: 'bold' }}>
+        {value}
+      </div>
+      <div style={{ color: '#6b7280', fontSize: '12px', fontWeight: 500, marginTop: '0.25rem' }}>
+        {subtext}
+      </div>
+    </div>
+  </div>
+);
+
 export default function RelatorioPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [sales, setSales] = useState<Sale[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -80,28 +125,29 @@ export default function RelatorioPage() {
   };
 
   useEffect(() => {
-    fetchSales();
+    if (!user) {
+      router.replace('/login');
+    } else {
+      fetchSales();
+    }
     // eslint-disable-next-line
   }, [user]);
 
-  const summaryData = useMemo(() => {
+  const dashboardSummaryData = useMemo(() => {
     if (loading || sales.length === 0) return {
-      approvedCount: 0,
-      pendingCount: 0,
-      conversionRate: 0,
       totalRevenue: 0,
+      approvedSales: 0,
+      pendingSales: 0,
+      totalSales: 0,
     };
     const approvedSales = sales.filter(s => s.status === 'aprovado');
     const pendingSales = sales.filter(s => s.status === 'pendente');
-    const approvedCount = approvedSales.length;
-    const pendingCount = pendingSales.length;
     const totalRevenue = sales.reduce((acc, s) => acc + (s.price || 0), 0);
-    const conversionRate = sales.length > 0 ? (approvedCount / sales.length) * 100 : 0;
     return {
-      approvedCount,
-      pendingCount,
-      conversionRate,
       totalRevenue,
+      approvedSales: approvedSales.length,
+      pendingSales: pendingSales.length,
+      totalSales: sales.length,
     };
   }, [sales, loading]);
 
@@ -122,125 +168,265 @@ export default function RelatorioPage() {
     }
   };
 
+  // Filtro de pesquisa funcional
+  const filteredSales = useMemo(() => {
+    if (!search.trim()) return sales;
+    const term = search.trim().toLowerCase();
+    return sales.filter(sale =>
+      (sale.nome && sale.nome.toLowerCase().includes(term)) ||
+      (sale.product_name && sale.product_name.toLowerCase().includes(term)) ||
+      (sale.id && sale.id.toLowerCase().includes(term)) ||
+      (sale.status && sale.status.toLowerCase().includes(term))
+    );
+  }, [sales, search]);
+
+  if (!user) return <div>Carregando...</div>;
+
   // Filtros visuais apenas (não funcionais)
   return (
-    <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-0 py-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <div className="bg-purple-700 rounded-lg p-3 flex items-center justify-center">
-            <FaDollarSign size={24} className="text-white" />
-          </div>
-          <div>
-            <h1 className="heading-1 mb-1">Vendas</h1>
-            <p className="text-gray-400 text-base">Gerencie suas transações</p>
-          </div>
-        </div>
-        <button onClick={fetchSales} disabled={loading} className="btn-outline flex items-center gap-2 disabled:opacity-50">
-          <FaSyncAlt className={loading ? 'animate-spin' : ''} />
+    <div style={{
+      width: 'min(90vw, 1700px)',
+      boxSizing: 'border-box',
+      overflowX: 'auto',
+      paddingLeft: 240,
+      paddingTop: '2rem',
+      minHeight: '100vh',
+      background: '#030712',
+      margin: '0 auto',
+    }}>
+      {/* Cabeçalho da página */}
+      <div style={{ marginBottom: '0', marginTop: '0.5rem' }}>
+        <h1 style={{ fontSize: 32, fontWeight: 900, color: '#fff', letterSpacing: '-1px', marginBottom: 6 }}>Vendas</h1>
+        <p style={{ fontSize: 18, color: '#fff', fontWeight: 400 }}>Gerencie suas transações</p>
+      </div>
+
+      {/* Botão Atualizar dados alinhado à direita */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem' }}>
+        <button
+          onClick={fetchSales}
+          disabled={loading}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 10,
+            background: '#030712',
+            border: '2px solid #23243a',
+            color: '#fff',
+            fontWeight: 700,
+            fontSize: 16,
+            borderRadius: 12,
+            padding: '0.7rem 1.6rem',
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px 0 rgba(0,0,0,0.10)',
+            transition: 'all 0.18s',
+            opacity: loading ? 0.6 : 1,
+          }}
+          onMouseOver={e => e.currentTarget.style.background = '#030712'}
+          onMouseOut={e => e.currentTarget.style.background = '#030712'}
+        >
+          <FaSyncAlt style={{ color: '#a78bfa', fontSize: 20, animation: loading ? 'spin 1s linear infinite' : undefined }} />
           Atualizar dados
         </button>
       </div>
 
-      {/* Cards de resumo - VISUAL EXATO DO PRINT */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {summaryCards.map((card) => (
-          <div
-            key={card.label}
-            className="card-neon"
-          >
-            <div className="icon-corner">{card.icon}</div>
-            <div>
-              <div className="label">{card.label}</div>
-              <div className="value">
-                {card.valueKey === 'conversionRate'
-                  ? `${summaryData.conversionRate.toFixed(2)}%`
-                  : card.valueKey === 'totalRevenue'
-                  ? formatPrice(summaryData.totalRevenue)
-                  : summaryData[card.valueKey as keyof typeof summaryData]}
-              </div>
-              <div className="subtext">{card.subtext}</div>
-            </div>
-          </div>
-        ))}
+      {/* Cards resumo */}
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '1.5rem',
+        width: '100%',
+        justifyContent: 'flex-start',
+        marginBottom: '2rem',
+      }}>
+        <RelatorioSummaryCard
+          icon={<FaCheckCircle size={26} />}
+          label="Vendas aprovadas"
+          value={dashboardSummaryData.approvedSales}
+          subtext="Total de vendas aprovadas"
+        />
+        <RelatorioSummaryCard
+          icon={<FaHourglassHalf size={26} />}
+          label="Vendas pendentes"
+          value={dashboardSummaryData.pendingSales}
+          subtext="Aguardando confirmação"
+        />
+        <RelatorioSummaryCard
+          icon={<FaPercentage size={26} />}
+          label="Taxa de conversão"
+          value={dashboardSummaryData.totalSales > 0 ? ((dashboardSummaryData.approvedSales / dashboardSummaryData.totalSales) * 100).toFixed(2) + '%' : '0.00%'}
+          subtext="Aprovadas + Total"
+        />
+        <RelatorioSummaryCard
+          icon={<FaDollarSign size={26} />}
+          label="Valor total"
+          value={`R$ ${dashboardSummaryData.totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+          subtext="Receita bruta"
+        />
       </div>
 
       {/* Filtros */}
-      <div className="flex flex-wrap gap-3 items-center mb-6 bg-transparent">
-        <div className="relative flex-grow max-w-xs">
-          <FaSearch className="absolute top-1/2 -translate-y-1/2 left-3 text-gray-400" />
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '1.1rem',
+        alignItems: 'center',
+        background: '#030712',
+        borderRadius: '1.2rem',
+        padding: '1.5rem 2.5rem',
+        marginBottom: '2rem',
+        border: '1px solid #23243a',
+        boxShadow: '0 4px 24px 0 rgba(0,0,0,0.10)',
+      }}>
+        <div style={{
+          background: '#030712',
+          border: '2px solid #23243a',
+          borderRadius: '1rem',
+          boxShadow: '0 2px 8px 0 rgba(0,0,0,0.10)',
+          padding: '0.2rem 1.2rem 0.2rem 0.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          minWidth: 260,
+          position: 'relative',
+        }}>
+          <FaSearch style={{
+            position: 'absolute',
+            left: 20,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            color: '#a78bfa',
+            fontSize: 22,
+            pointerEvents: 'none',
+          }} />
           <input
             type="text"
             placeholder="Pesquisar por"
-            className="input-modern pl-10 pr-4"
             value={search}
             onChange={e => setSearch(e.target.value)}
+            style={{
+              minWidth: 180,
+              background: 'transparent',
+              color: '#fff',
+              border: 'none',
+              outline: 'none',
+              height: 48,
+              fontSize: 17,
+              borderRadius: 10,
+              padding: '0 0 0 2.5rem',
+              fontWeight: 500,
+              flex: 1,
+              transition: 'border 0.18s',
+            }}
+            onFocus={e => {
+              if (e.target.parentElement) e.target.parentElement.style.border = '2px solid #a78bfa';
+            }}
+            onBlur={e => {
+              if (e.target.parentElement) e.target.parentElement.style.border = '2px solid #23243a';
+            }}
           />
         </div>
-        <button className="filter-btn">Status <FaChevronDown /></button>
-        <button className="filter-btn">Data <FaChevronDown /></button>
-        <button className="filter-btn">Método de Pagamento <FaChevronDown /></button>
-        <button className="filter-btn">Produto <FaChevronDown /></button>
-        <button className="filter-btn">UTM <FaChevronDown /></button>
+        {[
+          { label: 'Status', minWidth: 130 },
+          { label: 'Data', minWidth: 110 },
+          { label: 'Método de Pagamento', minWidth: 190 },
+          { label: 'Produto', minWidth: 120 },
+          { label: 'UTM', minWidth: 100 },
+        ].map((btn, idx) => (
+          <button
+            key={btn.label}
+            className="filter-btn"
+            style={{
+              background: '#030712',
+              border: '2px solid #23243a',
+              borderRadius: '1rem',
+              color: '#a1a1aa',
+              minWidth: btn.minWidth,
+              height: 48,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              fontWeight: 700,
+              fontSize: 17,
+              padding: '0 1.5rem',
+              boxShadow: '0 2px 8px 0 rgba(0,0,0,0.10)',
+              transition: 'border 0.2s, color 0.2s, box-shadow 0.2s',
+              cursor: 'pointer',
+            }}
+            onMouseOver={e => {
+              e.currentTarget.style.border = '2px solid #a78bfa';
+              e.currentTarget.style.color = '#a78bfa';
+              e.currentTarget.style.boxShadow = '0 4px 16px 0 rgba(0,0,0,0.16)';
+            }}
+            onMouseOut={e => {
+              e.currentTarget.style.border = '2px solid #23243a';
+              e.currentTarget.style.color = '#a1a1aa';
+              e.currentTarget.style.boxShadow = '0 2px 8px 0 rgba(0,0,0,0.10)';
+            }}
+          >
+            {btn.label} <FaChevronDown style={{ marginLeft: 6, fontSize: 18 }} />
+          </button>
+        ))}
       </div>
 
       {/* Caixa Transações */}
-      <div className="card-glass mt-2 mb-4">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="heading-2">Transações</h2>
-          <span className="text-base text-gray-400">{sales.length} transações encontradas</span>
+      <div style={{
+        background: '#030712',
+        border: '2px solid #23243a',
+        borderRadius: '1.2rem',
+        boxShadow: '0 2px 12px 0 rgba(0,0,0,0.10)',
+        padding: '2rem 2.5rem',
+        marginTop: '2rem',
+        marginBottom: '2rem',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h2 style={{ fontSize: 26, fontWeight: 800, color: '#fff', letterSpacing: '-0.5px' }}>Transações</h2>
+          <span style={{ fontSize: 16, color: '#a1a1aa', fontWeight: 500 }}>{sales.length} transações encontradas</span>
         </div>
-        <div className="overflow-x-auto rounded-xl">
-          <table className="table-modern text-base">
+        <div style={{ overflowX: 'auto', borderRadius: '1rem' }}>
+          <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, background: 'transparent' }}>
             <thead>
-              <tr>
-                <th><FaCalendarAlt className="inline-block mr-2" /> Data</th>
-                <th>ID</th>
-                <th>$ Líquido</th>
-                <th><FaBoxOpen className="inline-block mr-2" /> Produto</th>
-                <th><FaUser className="inline-block mr-2" /> Cliente</th>
-                <th><FaCreditCard className="inline-block mr-2" /> Pagamento</th>
-                <th>Status</th>
+              <tr style={{ background: '#0B101D' }}>
+                <th style={{ padding: '1rem', color: '#a1a1aa', fontWeight: 700, fontSize: 15, textAlign: 'left', borderTopLeftRadius: '1rem', letterSpacing: '-0.5px' }}><FaCalendarAlt style={{marginRight: 6, marginBottom: -2}}/> Data</th>
+                <th style={{ padding: '1rem', color: '#a1a1aa', fontWeight: 700, fontSize: 15, textAlign: 'left', letterSpacing: '-0.5px' }}>ID</th>
+                <th style={{ padding: '1rem', color: '#a1a1aa', fontWeight: 700, fontSize: 15, textAlign: 'left', letterSpacing: '-0.5px' }}><FaDollarSign style={{marginRight: 6, marginBottom: -2}}/> Líquido</th>
+                <th style={{ padding: '1rem', color: '#a1a1aa', fontWeight: 700, fontSize: 15, textAlign: 'left', letterSpacing: '-0.5px' }}><FaBoxOpen style={{marginRight: 6, marginBottom: -2}}/> Produto</th>
+                <th style={{ padding: '1rem', color: '#a1a1aa', fontWeight: 700, fontSize: 15, textAlign: 'left', letterSpacing: '-0.5px' }}><FaUser style={{marginRight: 6, marginBottom: -2}}/> Cliente</th>
+                <th style={{ padding: '1rem', color: '#a1a1aa', fontWeight: 700, fontSize: 15, textAlign: 'left', letterSpacing: '-0.5px' }}><FaCreditCard style={{marginRight: 6, marginBottom: -2}}/> Pagamento</th>
+                <th style={{ padding: '1rem', color: '#a1a1aa', fontWeight: 700, fontSize: 15, textAlign: 'left', borderTopRightRadius: '1rem', letterSpacing: '-0.5px' }}>Status</th>
               </tr>
             </thead>
             <tbody>
-              {loading && [...Array(5)].map((_, i) => (
-                <tr key={i} className="skeleton">
-                  <td colSpan={7} className="h-8"></td>
+              {filteredSales.length === 0 && (
+                <tr>
+                  <td colSpan={7} style={{ textAlign: 'center', color: '#a1a1aa', padding: '2rem', fontSize: 16 }}>Nenhuma venda encontrada.</td>
                 </tr>
-              ))}
-              {!loading && sales.map((sale) => (
-                <tr key={sale.id} className="hover-lift transition-all">
-                  <td>{formatDate(sale.created_at)}</td>
-                  <td className="font-mono text-gray-400">{sale.id.substring(0, 8)}...</td>
-                  <td className="font-semibold text-green-500">{formatPrice(sale.price)}</td>
-                  <td>Produto</td>
-                  <td>{sale.nome || 'N/A'}</td>
-                  <td>----</td>
-                  <td>
+              )}
+              {filteredSales.map((sale, idx) => (
+                <tr key={sale.id} style={{ background: idx % 2 === 0 ? 'rgba(255,255,255,0.01)' : 'rgba(255,255,255,0.03)', transition: 'background 0.2s' }}>
+                  <td style={{ padding: '1rem', color: '#fff', fontWeight: 600, whiteSpace: 'nowrap' }}>{formatDate(sale.created_at)}</td>
+                  <td style={{ padding: '1rem' }}>
+                    <span style={{ background: '#1C2533', color: '#F9FAFB', borderRadius: 8, padding: '0.3rem 0.7rem', fontSize: 13, fontWeight: 700, fontFamily: 'monospace', display: 'inline-block', letterSpacing: '0.5px' }}>{sale.id}</span>
+                  </td>
+                  <td style={{ padding: '1rem', color: '#fff', fontWeight: 800, fontSize: 16 }}>{formatPrice(sale.price)}</td>
+                  <td style={{ padding: '1rem', color: '#c4b5fd', fontWeight: 500 }}>{sale.product_name || '-'}</td>
+                  <td style={{ padding: '1rem', color: '#a1a1aa', fontWeight: 500, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sale.nome || '-'}</td>
+                  <td style={{ padding: '1rem' }}>
+                    <span style={{ background: '#030712', borderRadius: '50%', width: 36, height: 36, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <SiPix style={{ color: '#00B686', fontSize: 20 }} />
+                    </span>
+                  </td>
+                  <td style={{ padding: '1rem' }}>
                     {sale.status === 'aprovado' ? (
-                      <span className="bg-green-900/30 text-green-400 text-xs font-bold px-3 py-1 rounded-full border border-green-700">Aprovado</span>
+                      <span style={{ background: '#052e16', color: '#22c55e', borderRadius: 16, padding: '0.3rem 1.1rem', fontWeight: 700, fontSize: 14, display: 'inline-block' }}><FaCheckCircle style={{marginRight: 6, marginBottom: -2}}/>Aprovado</span>
                     ) : sale.status === 'pendente' ? (
-                      <span className="bg-yellow-900/30 text-yellow-400 text-xs font-bold px-3 py-1 rounded-full border border-yellow-700">Pendente</span>
+                      <span style={{ background: '#3d2c13', color: '#fbbf24', borderRadius: 16, padding: '0.3rem 1.1rem', fontWeight: 700, fontSize: 14, display: 'inline-block' }}><FaHourglassHalf style={{marginRight: 6, marginBottom: -2}}/>Pendente</span>
                     ) : (
-                      <span className="bg-gray-800 text-gray-300 text-xs font-bold px-3 py-1 rounded-full border border-gray-700">{sale.status || 'Desconhecido'}</span>
+                      <span style={{ background: '#23243a', color: '#a1a1aa', borderRadius: 16, padding: '0.3rem 1.1rem', fontWeight: 700, fontSize: 14, display: 'inline-block' }}>{sale.status || '-'}</span>
                     )}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {!loading && sales.length === 0 && (
-            <div className="text-center py-16 text-gray-400">
-              <p className="text-xl">Nenhuma transação encontrada.</p>
-              <p className="text-base">Quando as vendas começarem, elas aparecerão aqui.</p>
-            </div>
-          )}
-          {error && (
-            <div className="text-center py-16 text-red-400">
-              <p><strong>Erro:</strong> {error}</p>
-            </div>
-          )}
         </div>
       </div>
     </div>

@@ -1,74 +1,121 @@
-import { ClipboardCopy, Trash2, Edit, RefreshCw, CheckCircle2, ChevronDown, Loader2, Calendar as CalendarIcon } from 'lucide-react';
+import { ClipboardCopy, Trash2, Edit, RefreshCw, CheckCircle2, XCircle, Loader2, Plus } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
 
-const copyToClipboard = (text: string) => {
+const copyToClipboard = (text, setCopied) => {
   navigator.clipboard.writeText(text);
-  toast.success('Link copiado para a área de transferência!');
+  setCopied(true);
+  toast.success('Link copiado!');
+  setTimeout(() => setCopied(false), 1000);
 };
-
-// Mock function for now
-const clearCache = () => {
-  toast.success('Cache limpo!');
-}
 
 const ProductRow = ({ product, onDeleteProduct }) => {
   const [isHovered, setIsHovered] = useState(false);
-
-  const actionButtonStyle = {
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    padding: '0.5rem',
-    borderRadius: '9999px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
-  };
+  const [copied, setCopied] = useState(false);
 
   return (
-    <tr 
+    <tr
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      style={{ backgroundColor: isHovered ? '#0E0725' : 'transparent', transition: 'background-color 0.2s ease-in-out' }}
+      style={{
+        background: isHovered ? '#18181b' : 'transparent',
+        transition: 'background 0.15s',
+        borderRadius: 10,
+      }}
     >
-      <td style={{ padding: '1rem', color: 'white', fontWeight: 500 }}>{product.name}</td>
-      <td style={{ padding: '1rem' }}>
-        <div 
-          onClick={() => copyToClipboard(`${window.location.origin}/checkout/${product.id}`)}
+      <td style={{ padding: '0.9rem 0.7rem', color: '#fff', fontWeight: 600, fontSize: 16 }}>{product.name}</td>
+      <td style={{ padding: '0.9rem 0.7rem' }}>
+        <div
+          onClick={() => copyToClipboard(product.checkout_url || `${window.location.origin}/checkout/${product.id}`, setCopied)}
+          title="Copiar link do checkout"
           style={{
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '0.5rem',
-            backgroundColor: '#111827',
+            gap: '0.4rem',
+            background: '#030712',
             border: '1px solid #1A0938',
-            borderRadius: '0.375rem',
-            padding: '0.5rem 0.75rem',
-            fontSize: '0.875rem',
-            color: '#D1D5DB',
+            borderRadius: 8,
+            padding: '0.4rem 0.9rem',
+            fontSize: '0.97rem',
+            color: copied ? '#a78bfa' : '#a1a1aa',
             cursor: 'pointer',
-            boxShadow: 'inset 0 1px 2px 0 rgba(0,0,0,0.5)'
+            fontWeight: 500,
+            minWidth: 120,
+            maxWidth: 180,
+            overflow: 'hidden',
+            transition: 'color 0.15s, border 0.15s',
+            borderColor: copied ? '#a78bfa' : '#1A0938',
           }}
         >
-          <span>http://localhost:3001/che...</span>
-          <ClipboardCopy size={14} />
+          <span style={{ maxWidth: 110, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{product.checkout_url || `${window.location.origin}/checkout/${product.id}`}</span>
+          <ClipboardCopy size={18} />
         </div>
       </td>
-      <td style={{ padding: '1rem', color: '#9CA3AF' }}>
-        {new Date(product.created_at).toLocaleDateString('pt-BR')} - {new Date(product.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+      <td style={{ padding: '0.9rem 0.7rem', color: '#a1a1aa', fontWeight: 400, fontSize: 15 }}>
+        {new Date(product.created_at).toLocaleDateString('pt-BR')}
       </td>
-      <td style={{ padding: '1rem' }}>
-        <CheckCircle2 style={{ color: '#22C55E' }} />
+      <td style={{ padding: '0.9rem 0.7rem', textAlign: 'center' }}>
+        {product.active ? (
+          <CheckCircle2 size={18} style={{ color: '#22C55E' }} title="Ativo" />
+        ) : (
+          <XCircle size={18} style={{ color: '#fbbf24' }} title="Inativo" />
+        )}
       </td>
-      <td style={{ padding: '1rem' }}>
-        <button style={{...actionButtonStyle, color: '#9CA3AF' }} title="Editar">
-          <Edit size={16} />
+      <td style={{ padding: '0.9rem 0.7rem', textAlign: 'center' }}>
+        <button
+          style={{
+            background: 'none',
+            border: 'none',
+            color: '#a1a1aa',
+            borderRadius: '50%',
+            padding: 8,
+            cursor: 'pointer',
+            transition: 'background 0.18s, color 0.18s',
+            fontSize: 0,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          title="Editar produto"
+          onMouseOver={e => {
+            e.currentTarget.style.background = 'rgba(167,139,250,0.12)';
+            e.currentTarget.style.color = '#a78bfa';
+          }}
+          onMouseOut={e => {
+            e.currentTarget.style.background = 'none';
+            e.currentTarget.style.color = '#a1a1aa';
+          }}
+        >
+          <Edit size={22} />
         </button>
       </td>
-      <td style={{ padding: '1rem' }}>
-        <button onClick={() => onDeleteProduct(product.id)} style={{ ...actionButtonStyle, color: '#EF4444' }} title="Excluir">
-          <Trash2 size={16} />
+      <td style={{ padding: '0.9rem 0.7rem', textAlign: 'center' }}>
+        <button
+          onClick={() => onDeleteProduct(product.id)}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: '#ef4444',
+            borderRadius: '50%',
+            padding: 8,
+            cursor: 'pointer',
+            transition: 'background 0.18s, color 0.18s',
+            fontSize: 0,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          title="Excluir produto"
+          onMouseOver={e => {
+            e.currentTarget.style.background = 'rgba(255,77,79,0.12)';
+            e.currentTarget.style.color = '#ff4d4f';
+          }}
+          onMouseOut={e => {
+            e.currentTarget.style.background = 'none';
+            e.currentTarget.style.color = '#ef4444';
+          }}
+        >
+          <Trash2 size={22} />
         </button>
       </td>
     </tr>
@@ -76,59 +123,58 @@ const ProductRow = ({ product, onDeleteProduct }) => {
 }
 
 export default function ProductList({ products, loading, onDeleteProduct }) {
+  const [search, setSearch] = useState('');
+
   if (loading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '16rem', color: '#9CA3AF' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '10rem', color: '#9CA3AF', fontSize: 16 }}>
         <Loader2 className="animate-spin" style={{ marginRight: '0.5rem' }} />
         Carregando produtos...
       </div>
     );
   }
 
-  const handleDelete = async (productId) => {
-    if (!window.confirm('Tem certeza que deseja deletar este produto? Esta ação não pode ser desfeita.')) {
-      return;
-    }
-    await onDeleteProduct(productId);
-    toast.success('Produto deletado com sucesso!');
-  };
+  const filteredProducts = products.filter(product =>
+    product.name.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <div style={{ backgroundColor: '#030712', borderRadius: '0.75rem', border: '3px solid #0E0725', padding: '0 1.5rem' }}>
-      {(!products || products.length === 0) ? (
-        <div style={{ textAlign: 'center', color: '#9CA3AF', padding: '4rem 0' }}>
-          <p>Nenhum produto encontrado.</p>
-        </div>
-      ) : (
-        <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'separate', borderSpacing: '0 1rem' }}>
+    <div style={{
+      background: '#030712',
+      borderRadius: 18,
+      padding: '2.2rem 2rem',
+      border: '1.5px solid #1A0938',
+      maxWidth: 1300,
+      margin: '0 auto',
+      boxShadow: '0 8px 32px 0 rgba(30,41,59,0.13)',
+      backdropFilter: 'blur(4px)',
+    }}>
+      {/* Tabela minimalista */}
+      <div style={{ overflowX: 'auto', borderRadius: 10 }}>
+        <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'separate', borderSpacing: 0, minWidth: 600 }}>
           <thead>
-            <tr style={{ borderBottom: '1px solid #0E0725' }}>
-              <th style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', color: '#9CA3AF', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>Oferta <ChevronDown size={16}/></th>
-              <th style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', color: '#9CA3AF', fontWeight: 500 }}>Link Checkout</th>
-              <th style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', color: '#9CA3AF', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                Criado em:
-                <button style={{ background: 'none', border: '1px solid #374151', borderRadius: '0.375rem', color: '#9CA3AF', padding: '0.25rem 0.5rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                  <CalendarIcon size={14} />
-                  Data
-                </button>
-              </th>
-              <th style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', color: '#9CA3AF', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                Publicado
-                <select style={{ background: '#1F2937', border: '1px solid #374151', borderRadius: '0.375rem', color: '#9CA3AF', padding: '0.25rem 0.5rem' }}>
-                  <option>Todos</option>
-                </select>
-              </th>
-              <th style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', color: '#9CA3AF', fontWeight: 500 }}>Editar</th>
-              <th style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', color: '#9CA3AF', fontWeight: 500 }}>Excluir</th>
+            <tr style={{ borderBottom: '2px solid rgba(255,255,255,0.08)' }}>
+              <th style={{ padding: '0.9rem 0.7rem', color: '#a1a1aa', fontWeight: 700, fontSize: 15, background: 'none' }}>Nome</th>
+              <th style={{ padding: '0.9rem 0.7rem', color: '#a1a1aa', fontWeight: 700, fontSize: 15, background: 'none' }}>Link</th>
+              <th style={{ padding: '0.9rem 0.7rem', color: '#a1a1aa', fontWeight: 700, fontSize: 15, background: 'none' }}>Criado em</th>
+              <th style={{ padding: '0.9rem 0.7rem', color: '#a1a1aa', fontWeight: 700, fontSize: 15, background: 'none', textAlign: 'center' }}>Status</th>
+              <th style={{ padding: '0.9rem 0.7rem', color: '#a1a1aa', fontWeight: 700, fontSize: 15, background: 'none', textAlign: 'center' }}>Editar</th>
+              <th style={{ padding: '0.9rem 0.7rem', color: '#a1a1aa', fontWeight: 700, fontSize: 15, background: 'none', textAlign: 'center' }}>Excluir</th>
             </tr>
           </thead>
-          <tbody style={{ borderTop: '1px solid #0E0725' }}>
-            {products.map((product) => (
-              <ProductRow key={product.id} product={product} onDeleteProduct={onDeleteProduct} />
-            ))}
+          <tbody>
+            {filteredProducts.length === 0 ? (
+              <tr>
+                <td colSpan={6} style={{ textAlign: 'center', color: '#a1a1aa', padding: '2rem', fontSize: 15 }}>Nenhum produto encontrado.</td>
+              </tr>
+            ) : (
+              filteredProducts.map(product => (
+                <ProductRow key={product.id} product={product} onDeleteProduct={onDeleteProduct} />
+              ))
+            )}
           </tbody>
         </table>
-      )}
+      </div>
     </div>
   );
 } 

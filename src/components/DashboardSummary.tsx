@@ -1,4 +1,7 @@
-import { FaWallet, FaHourglassHalf, FaShoppingCart, FaReceipt, FaTasks } from 'react-icons/fa';
+import { FaWallet, FaHourglassHalf, FaShoppingCart, FaReceipt, FaTasks, FaRegCalendarAlt } from 'react-icons/fa';
+import React, { useState } from 'react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 interface DashboardSummaryProps {
   salesData: {
@@ -7,26 +10,36 @@ interface DashboardSummaryProps {
     pendingSales: number;
     totalSales: number;
   } | null;
+  showValues?: boolean;
+  children?: React.ReactNode;
 }
 
-const SummaryCard = ({ icon, label, value }) => (
+interface SummaryCardProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
+}
+
+const SummaryCard = ({ icon, label, value }: SummaryCardProps) => (
   <div
     style={{
-      backgroundColor: '#09090B',
+      backgroundColor: '#030712',
       border: '1px solid #1A0938',
       borderRadius: '0.75rem',
       padding: '1.5rem',
-      minWidth: '280px',
-      flex: 1,
+      flex: '1 1 340px',
+      minWidth: 260,
+      maxWidth: 500,
+      width: '100%',
       display: 'flex',
-      alignItems: 'center',
-      gap: '1rem'
+      alignItems: 'flex-start',
+      gap: '1rem',
+      boxSizing: 'border-box',
+      height: '100%',
     }}
   >
-    <div style={{ color: '#8b5cf6' }}>
-      {icon}
-    </div>
-    <div>
+    <div style={{ color: '#8b5cf6', marginTop: 2 }}>{icon}</div>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'flex-start', height: '100%' }}>
       <div style={{ color: '#d1d5db', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.25rem' }}>
         {label}
       </div>
@@ -39,16 +52,19 @@ const SummaryCard = ({ icon, label, value }) => (
 
 const SkeletonCard = () => (
     <div style={{
-        backgroundColor: '#09090B',
+        backgroundColor: '#030712',
         border: '1px solid #1A0938',
         borderRadius: '0.75rem',
         padding: '1.5rem',
-        minWidth: '280px',
-        flex: 1,
+        flex: '1 1 340px',
+        minWidth: 260,
+        maxWidth: 500,
+        width: '100%',
         display: 'flex',
         alignItems: 'center',
         gap: '1rem',
-        animation: 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+        animation: 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        boxSizing: 'border-box',
     }}>
         <div style={{ width: '40px', height: '40px', backgroundColor: '#1F2937', borderRadius: '50%' }}></div>
         <div style={{ flex: 1 }}>
@@ -58,12 +74,92 @@ const SkeletonCard = () => (
     </div>
 )
 
+// Componente para o seletor de intervalo de datas funcional
+const DateRangeSelector = ({ startDate, endDate, onChange }) => {
+  return (
+    <div style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      backgroundColor: '#030712',
+      borderRadius: '1rem',
+      padding: '0.5rem 1.25rem',
+      color: 'white',
+      fontWeight: 700,
+      fontSize: '1rem',
+      gap: '0.75rem',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
+      border: '1.5px solid #1A0938',
+      marginBottom: '1.5rem',
+      width: 'fit-content',
+      maxWidth: '100%',
+      overflow: 'hidden',
+      whiteSpace: 'nowrap',
+      textOverflow: 'ellipsis',
+    }}>
+      <FaRegCalendarAlt style={{ fontSize: 20, color: '#a78bfa', opacity: 1, marginRight: 4 }} />
+      <DatePicker
+        selectsRange
+        startDate={startDate}
+        endDate={endDate}
+        onChange={onChange}
+        dateFormat="dd 'de' MMM 'de' yyyy"
+        locale="pt-BR"
+        customInput={<CustomInput startDate={startDate} endDate={endDate} />}
+        calendarClassName="date-range-calendar"
+      />
+    </div>
+  );
+};
 
-export default function DashboardSummary({ salesData }: DashboardSummaryProps) {
+// Custom input para exibir o intervalo no padrão do painel
+const CustomInput = React.forwardRef(({ value, onClick }, ref) => (
+  <button
+    onClick={onClick}
+    ref={ref}
+    style={{
+      background: 'none',
+      border: 'none',
+      color: 'white',
+      fontWeight: 700,
+      fontSize: '1rem',
+      cursor: 'pointer',
+      padding: 0,
+      outline: 'none',
+    }}
+  >
+    {value || 'Selecione o período'}
+  </button>
+));
+
+export default function DashboardSummary({ salesData, showValues = true, children }: DashboardSummaryProps) {
+  // Estado para o intervalo de datas
+  const [dateRange, setDateRange] = useState([new Date(new Date().setDate(new Date().getDate() - 16)), new Date()]);
+  const [startDate, endDate] = dateRange;
+
   if (!salesData) {
     return (
-      <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '2rem' }}>
-        {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
+      <div>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          width: '100%',
+          marginBottom: '1.5rem',
+        }}>
+          <DateRangeSelector startDate={startDate} endDate={endDate} onChange={(update) => setDateRange(update)} />
+          {children}
+        </div>
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '1.5rem',
+          width: '100%',
+          justifyContent: 'flex-start',
+          marginBottom: '2rem',
+          alignItems: 'stretch',
+        }}>
+          {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
+        </div>
       </div>
     )
   }
@@ -72,35 +168,55 @@ export default function DashboardSummary({ salesData }: DashboardSummaryProps) {
     {
       icon: <FaWallet size={26} />, 
       label: 'Faturamento', 
-      value: `R$ ${salesData.totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      value: showValues ? `R$ ${salesData.totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '••••',
     },
     {
       icon: <FaShoppingCart size={26} />, 
       label: 'Checkouts Iniciados (IC)', 
-      value: salesData.totalSales,
+      value: showValues ? salesData.totalSales : '••••',
     },
     {
       icon: <FaTasks size={26} />,
       label: 'Total de Vendas Aprovadas',
-      value: salesData.approvedSales,
+      value: showValues ? salesData.approvedSales : '••••',
     },
     {
       icon: <FaReceipt size={26} />,
       label: 'Total de Vendas Pendentes',
-      value: salesData.pendingSales,
+      value: showValues ? salesData.pendingSales : '••••',
     }
   ];
 
   return (
-    <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '2rem' }}>
-      {summaryItems.map((item, idx) => (
-        <SummaryCard
-          key={idx}
-          icon={item.icon}
-          label={item.label}
-          value={item.value}
-        />
-      ))}
+    <div>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        width: '100%',
+        marginBottom: '1.5rem',
+      }}>
+        <DateRangeSelector startDate={startDate} endDate={endDate} onChange={(update) => setDateRange(update)} />
+        {children}
+      </div>
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '1.5rem',
+        width: '100%',
+        justifyContent: 'flex-start',
+        marginBottom: '2rem',
+        alignItems: 'stretch',
+      }}>
+        {summaryItems.map((item, idx) => (
+          <SummaryCard
+            key={idx}
+            icon={item.icon}
+            label={item.label}
+            value={item.value}
+          />
+        ))}
+      </div>
     </div>
   );
 } 

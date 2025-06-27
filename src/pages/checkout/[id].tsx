@@ -2,12 +2,13 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { v4 as uuidv4 } from 'uuid';
+import { useAuth } from '../../context/AuthContext';
 
 export default function CheckoutPage() {
+  const { user, loading } = useAuth();
   const router = useRouter();
   const { id } = router.query;
   const [product, setProduct] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ nome: '', email: '', telefone: '' });
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
@@ -21,6 +22,12 @@ export default function CheckoutPage() {
   const [pixelId, setPixelId] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!loading && !user) {
+      router.replace('/login');
+    }
+  }, [user, loading, router]);
+
+  useEffect(() => {
     // Busca usuário logado
     supabase.auth.getUser().then(({ data }) => {
       setUserId(data?.user?.id || null);
@@ -31,23 +38,23 @@ export default function CheckoutPage() {
   }, []);
 
   useEffect(() => {
-    if (!id) return; // Aguarda o ID do produto estar disponível na URL
-
+    if (!id || !user) return;
     const fetchProductAndIntegration = async () => {
-      setLoading(true);
       try {
-        // 1. Buscar o produto pelo ID
         const { data: productData, error: productError } = await supabase
           .from('products')
           .select('*')
           .eq('id', id)
           .single();
-
         if (productError) throw productError;
         if (!productData) throw new Error('Produto não encontrado');
-
+        // Só deixa acessar se o produto for do usuário logado
+        if (productData.user_id !== user.id) {
+          router.replace('/acesso-negado');
+          return;
+        }
         setProduct(productData);
-        setUserId(productData.user_id); // Pega o user_id do produto
+        setUserId(productData.user_id);
 
         // 2. Buscar as integrações do dono do produto
         if (productData.user_id) {
@@ -78,13 +85,11 @@ export default function CheckoutPage() {
       } catch (error) {
         console.error("Erro ao carregar checkout:", error);
         setProduct(null); // Limpa o produto em caso de erro
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchProductAndIntegration();
-  }, [id]);
+  }, [id, user, router]);
 
   // Injetar Pixel do Facebook se houver pixelId
   useEffect(() => {
@@ -146,19 +151,6 @@ export default function CheckoutPage() {
       console.error("Erro ao inserir log de checkout:", error);
       setFormError('Erro ao registrar checkout.');
       return;
-    }
-
-    // Envia webhook para UTMFY se integração estiver configurada
-    if (inserted) {
-      try {
-        await fetch('/api/utmfy-webhook', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sale: inserted }),
-        });
-      } catch (err) {
-        console.warn('Falha ao enviar webhook UTMFY:', err);
-      }
     }
 
     setStatus('pendente');

@@ -15,10 +15,6 @@ export default function IntegrationForm() {
   const [pixelId, setPixelId] = useState('');
   const [pixelMsg, setPixelMsg] = useState('');
   const [pixelLoading, setPixelLoading] = useState(false);
-  // Otimizey
-  const [otimizeyApiKey, setOtimizeyApiKey] = useState('');
-  const [otimizeyMsg, setOtimizeyMsg] = useState('');
-  const [otimizeyLoading, setOtimizeyLoading] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -52,23 +48,8 @@ export default function IntegrationForm() {
         setPixelId('');
       }
     };
-    // Buscar integração Otimizey
-    const fetchOtimizey = async () => {
-      const { data: otimizeyIntegration } = await supabase
-        .from('integrations')
-        .select('otimizey_api_key')
-        .eq('user_id', user.id)
-        .eq('provider', 'otimizey')
-        .single();
-      if (otimizeyIntegration?.otimizey_api_key) {
-        setOtimizeyApiKey(otimizeyIntegration.otimizey_api_key);
-      } else {
-        setOtimizeyApiKey('');
-      }
-    };
     fetchPushinPay();
     fetchPixel();
-    fetchOtimizey();
   }, [user]);
 
   const handleSave = async () => {
@@ -96,28 +77,6 @@ export default function IntegrationForm() {
     if (error) setPixelMsg(error.message);
     else setPixelMsg('Pixel salvo!');
     setPixelLoading(false);
-  };
-
-  const handleSaveOtimizey = async () => {
-    setOtimizeyLoading(true);
-    setOtimizeyMsg('');
-    if (!otimizeyApiKey) {
-      setOtimizeyMsg('Por favor, insira uma chave de API válida.');
-      setOtimizeyLoading(false);
-      return;
-    }
-    const { error } = await supabase
-      .from('integrations')
-      .upsert({ user_id: user.id, provider: 'otimizey', otimizey_api_key: otimizeyApiKey }, { onConflict: ['user_id', 'provider'] });
-      
-    if (error) {
-      setOtimizeyMsg(`Erro ao salvar: ${error.message}`);
-      toast.error('Falha ao salvar a chave da Otimizey.');
-    } else {
-      setOtimizeyMsg('Chave da Otimizey salva com sucesso!');
-      toast.success('Chave da Otimizey salva!');
-    }
-    setOtimizeyLoading(false);
   };
 
   // Função para copiar para a área de transferência
@@ -172,89 +131,70 @@ export default function IntegrationForm() {
           </p>
         </div>
 
-        {/* PushinPay Integração */}
-        <div className="border-b pb-6 mb-6">
-          <h3 className="text-lg font-bold text-blue-700 mb-2">Integração PushinPay</h3>
-          <label htmlFor="api-key" className="block text-sm font-medium text-gray-700 mb-2">
-            Chave de API PushinPay
-          </label>
-          <div className="flex items-center gap-2">
-            <input
-              id="api-key"
-              type="password"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder="Cole sua chave de API PushinPay aqui"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition"
-            />
-            <button
-              onClick={handleSave}
-              disabled={loading}
-              className="p-3 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition disabled:bg-blue-400"
-              title="Salvar Chave PushinPay"
-            >
-              {loading ? <div className="w-5 h-5 border-t-2 border-white rounded-full animate-spin" /> : <Save size={18} />}
-            </button>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+          {/* PushinPay Integração */}
+          <div className="bg-gradient-to-br from-[#181826] to-[#23233a] border-2 border-purple-700 rounded-2xl shadow-2xl p-8 flex flex-col items-center transition-all duration-300 hover:scale-[1.03] hover:border-purple-400">
+            <div className="bg-gradient-to-br from-purple-700 to-blue-700 rounded-full p-4 mb-4 shadow-lg">
+              <svg width="40" height="40" fill="none" viewBox="0 0 24 24"><path fill="#fff" d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            </div>
+            <h3 className="text-2xl font-extrabold text-white mb-2 tracking-tight">PushinPay</h3>
+            <label htmlFor="api-key" className="block text-sm font-medium text-purple-300 mb-2 w-full text-left">
+              Chave de API
+            </label>
+            <div className="flex items-center gap-2 w-full mb-2">
+              <input
+                id="api-key"
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="Cole sua chave de API PushinPay aqui"
+                className="w-full px-4 py-2 border border-purple-700 rounded-lg bg-[#23233a] text-white focus:ring-2 focus:ring-purple-600 focus:border-purple-500 transition-all duration-200 placeholder-purple-400"
+              />
+              <button
+                onClick={handleSave}
+                disabled={loading}
+                className="p-3 bg-gradient-to-br from-purple-700 to-blue-700 text-white hover:from-purple-800 hover:to-blue-800 rounded-lg transition disabled:bg-purple-400 shadow-lg"
+                title="Salvar Chave PushinPay"
+              >
+                {loading ? <div className="w-5 h-5 border-t-2 border-white rounded-full animate-spin" /> : <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path fill="#fff" d="M17 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2zm-5 14a1 1 0 110-2 1 1 0 010 2zm1-4h-2V7h2v6z"/></svg>}
+              </button>
+            </div>
+            <p className="text-xs text-purple-300 mb-2 w-full text-left">
+              Sua chave de API para se conectar à <b>PushinPay</b> e gerar cobranças.<br/>
+              Exemplo: <span className="font-mono text-purple-400">pk_live_xxxxxxxxxxxxxxxxxxxxx</span>
+            </p>
+            {message && <p className="text-xs text-green-400 mt-1 w-full text-left">{message}</p>}
           </div>
-          <p className="text-xs text-gray-500 mt-2">
-            Sua chave de API para se conectar à <b>PushinPay</b> e gerar cobranças.<br/>
-            Exemplo: <span className="font-mono">pk_live_xxxxxxxxxxxxxxxxxxxxx</span>
-          </p>
-          {message && <p className="text-xs text-green-600 mt-1">{message}</p>}
-        </div>
 
-        {/* Facebook Pixel Integração */}
-        <div className="border-b pb-6 mb-6">
-          <h3 className="text-lg font-bold text-blue-700 mb-2">Integração Facebook Pixel</h3>
-          <label htmlFor="pixel-id" className="block text-sm font-medium text-gray-700 mb-2">
-            Pixel ID
-          </label>
-          <div className="flex items-center gap-2">
-            <input
-              id="pixel-id"
-              type="text"
-              value={pixelId}
-              onChange={(e) => setPixelId(e.target.value)}
-              placeholder="Cole seu Pixel ID do Facebook aqui"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition"
-            />
-            <button
-              onClick={handleSavePixel}
-              disabled={pixelLoading}
-              className="p-3 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition disabled:bg-blue-400"
-              title="Salvar Pixel ID"
-            >
-              {pixelLoading ? <div className="w-5 h-5 border-t-2 border-white rounded-full animate-spin" /> : <Save size={18} />}
-            </button>
+          {/* Facebook Pixel Integração */}
+          <div className="bg-gradient-to-br from-[#181826] to-[#23233a] border-2 border-purple-700 rounded-2xl shadow-2xl p-8 flex flex-col items-center transition-all duration-300 hover:scale-[1.03] hover:border-purple-400">
+            <div className="bg-gradient-to-br from-blue-700 to-purple-700 rounded-full p-4 mb-4 shadow-lg">
+              <svg width="40" height="40" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="16" fill="#1877F2"/><path d="M21.333 16.001h-3.2v8h-3.2v-8h-2.133v-2.667h2.133v-1.6c0-2.133 1.067-3.2 3.2-3.2h2.133v2.667h-1.6c-.267 0-.533.267-.533.533v1.6h2.133l-.267 2.667z" fill="white"/></svg>
+            </div>
+            <h3 className="text-2xl font-extrabold text-white mb-2 tracking-tight">Facebook Pixel</h3>
+            <label htmlFor="pixel-id" className="block text-sm font-medium text-purple-300 mb-2 w-full text-left">
+              Pixel ID
+            </label>
+            <div className="flex items-center gap-2 w-full mb-2">
+              <input
+                id="pixel-id"
+                type="text"
+                value={pixelId}
+                onChange={(e) => setPixelId(e.target.value)}
+                placeholder="Cole seu Pixel ID do Facebook aqui"
+                className="w-full px-4 py-2 border border-purple-700 rounded-lg bg-[#23233a] text-white focus:ring-2 focus:ring-purple-600 focus:border-purple-500 transition-all duration-200 placeholder-purple-400"
+              />
+              <button
+                onClick={handleSavePixel}
+                disabled={pixelLoading}
+                className="p-3 bg-gradient-to-br from-blue-700 to-purple-700 text-white hover:from-blue-800 hover:to-purple-800 rounded-lg transition disabled:bg-purple-400 shadow-lg"
+                title="Salvar Pixel ID"
+              >
+                {pixelLoading ? <div className="w-5 h-5 border-t-2 border-white rounded-full animate-spin" /> : <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path fill="#fff" d="M17 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2zm-5 14a1 1 0 110-2 1 1 0 010 2zm1-4h-2V7h2v6z"/></svg>}
+              </button>
+            </div>
+            {pixelMsg && <p className="text-xs text-green-400 mt-1 w-full text-left">{pixelMsg}</p>}
           </div>
-          {pixelMsg && <p className="text-xs text-green-600 mt-1">{pixelMsg}</p>}
-        </div>
-
-        {/* Otimizey Integração */}
-        <div className="border-b pb-6 mb-6">
-          <h3 className="text-lg font-bold text-purple-700 mb-2">Integração Otimizey</h3>
-          <label htmlFor="otimizey-api-key" className="block text-sm font-medium text-gray-700 mb-2">
-            Chave de API Otimizey
-          </label>
-          <div className="flex items-center gap-2">
-            <input
-              id="otimizey-api-key"
-              type="password"
-              value={otimizeyApiKey}
-              onChange={(e) => setOtimizeyApiKey(e.target.value)}
-              placeholder="Cole sua chave de API Otimizey aqui"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500 transition"
-            />
-            <button
-              onClick={handleSaveOtimizey}
-              disabled={otimizeyLoading}
-              className="p-3 bg-purple-600 text-white hover:bg-purple-700 rounded-lg transition disabled:bg-purple-400"
-              title="Salvar Chave Otimizey"
-            >
-              {otimizeyLoading ? <div className="w-5 h-5 border-t-2 border-white rounded-full animate-spin" /> : <Save size={18} />}
-            </button>
-          </div>
-          {otimizeyMsg && <p className="text-xs text-purple-600 mt-1">{otimizeyMsg}</p>}
         </div>
       </div>
     </div>

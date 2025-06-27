@@ -4,6 +4,8 @@ import DashboardSummary from '../components/DashboardSummary';
 import { useAuth } from '../context/AuthContext';
 import { Line } from 'react-chartjs-2';
 import { Chart, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
+import { useRouter } from 'next/router';
+import { FaEye } from 'react-icons/fa';
 Chart.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend);
 
 interface SaleData {
@@ -15,12 +17,20 @@ interface SaleData {
 
 const DashboardPage = () => {
   const { user, loading: userLoading } = useAuth();
+  const router = useRouter();
   const [salesData, setSalesData] = useState<SaleData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [salesByPeriod, setSalesByPeriod] = useState<any[]>([]);
   const [salesByHour, setSalesByHour] = useState<any[]>([]);
   const [period, setPeriod] = useState<'today' | '7d' | '14d' | '30d'>('7d');
+  const [showValues, setShowValues] = useState(true);
   
+  useEffect(() => {
+    if (!userLoading && !user) {
+      router.replace('/login');
+    }
+  }, [user, userLoading, router]);
+
   useEffect(() => {
     if (user) {
       const fetchSalesData = async () => {
@@ -117,9 +127,7 @@ const DashboardPage = () => {
     }
   }, [user, period]);
 
-  if (userLoading || !salesData) {
-    return <p>Carregando...</p>;
-  }
+  if (userLoading || !user) return <div>Carregando...</div>;
   
   if (error) {
     return <p style={{ color: '#EF4444' }}>{error}</p>;
@@ -134,28 +142,60 @@ const DashboardPage = () => {
               const dateParts = d.date.split('/');
               return `${dateParts[0]} de ${new Date(dateParts[2], dateParts[1] - 1, dateParts[0]).toLocaleString('pt-BR', { month: 'short' })}`;
           }),
-                      datasets: [
-                        {
-              label: 'Vendas Aprovadas',
-              data: isTodayView ? salesByHour.map(d => d.aprovado) : salesByPeriod.map(d => d.aprovado),
-              borderColor: '#7910CE',
-              backgroundColor: 'rgba(121, 16, 206, 0.1)',
-              borderWidth: 2, tension: 0.4, fill: true, pointRadius: 0,
-          },
-          {
-              label: 'Vendas Pendentes',
-              data: isTodayView ? salesByHour.map(d => d.pendente) : salesByPeriod.map(d => d.pendente),
-              borderColor: '#f59e0b',
-              backgroundColor: 'rgba(245, 158, 11, 0.1)',
-              borderWidth: 2, tension: 0.4, fill: true, pointRadius: 0,
-          },
+      datasets: [
+        {
+          label: 'Vendas Aprovadas',
+          data: isTodayView ? salesByHour.map(d => d.aprovado) : salesByPeriod.map(d => d.aprovado),
+          borderColor: '#7910CE',
+          backgroundColor: 'rgba(121, 16, 206, 0.15)',
+          borderWidth: 4,
+          tension: 0.5,
+          fill: true,
+          pointRadius: 6,
+          pointBackgroundColor: '#fff',
+          pointBorderColor: '#7910CE',
+          pointBorderWidth: 3,
+          pointHoverRadius: 9,
+          shadowOffsetX: 0,
+          shadowOffsetY: 4,
+          shadowBlur: 10,
+          shadowColor: 'rgba(121, 16, 206, 0.25)',
+        },
+        {
+          label: 'Vendas Pendentes',
+          data: isTodayView ? salesByHour.map(d => d.pendente) : salesByPeriod.map(d => d.pendente),
+          borderColor: '#f59e0b',
+          backgroundColor: 'rgba(245, 158, 11, 0.12)',
+          borderWidth: 4,
+          tension: 0.5,
+          fill: true,
+          pointRadius: 6,
+          pointBackgroundColor: '#fff',
+          pointBorderColor: '#f59e0b',
+          pointBorderWidth: 3,
+          pointHoverRadius: 9,
+          shadowOffsetX: 0,
+          shadowOffsetY: 4,
+          shadowBlur: 10,
+          shadowColor: 'rgba(245, 158, 11, 0.18)',
+        },
       ],
   };
 
   const chartOptions = {
-                      responsive: true,
-                      maintainAspectRatio: false,
+    responsive: true,
+    maintainAspectRatio: false,
     plugins: { legend: { display: false } },
+    elements: {
+      line: {
+        borderJoinStyle: 'round',
+        capBezierPoints: true,
+      },
+      point: {
+        pointStyle: 'circle',
+        hoverBorderWidth: 4,
+      },
+    },
     scales: {
       x: { 
         grid: { color: 'rgba(255, 255, 255, 0.1)' },
@@ -169,12 +209,44 @@ const DashboardPage = () => {
   };
   
   return (
-    <Fragment>
-      <DashboardSummary salesData={salesData} />
+    <div style={{
+      width: 'min(90vw, 1700px)',
+      boxSizing: 'border-box',
+      overflowX: 'auto',
+      paddingLeft: 240,
+      paddingTop: '2rem',
+      minHeight: '100vh',
+      background: '#030712',
+      margin: '0 auto',
+    }}>
+      {/* Botão Mostrar valores agora vai como children do DashboardSummary */}
+      <DashboardSummary salesData={salesData} showValues={showValues}>
+        <button
+          onClick={() => setShowValues(v => !v)}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            background: '#030712',
+            border: '1.5px solid #1A0938',
+            color: '#fff',
+            fontWeight: 700,
+            fontSize: 16,
+            borderRadius: 12,
+            padding: '0.7rem 1.6rem',
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px 0 rgba(0,0,0,0.10)',
+            transition: 'all 0.18s',
+          }}
+        >
+          <FaEye style={{ color: '#a78bfa', fontSize: 18 }} />
+          {showValues ? 'Ocultar valores' : 'Mostrar valores'}
+        </button>
+      </DashboardSummary>
 
       <div style={{
         marginTop: '2rem',
-        backgroundColor: '#09090B',
+        backgroundColor: '#030712',
         border: '1px solid #1A0938',
         borderRadius: '0.75rem',
         padding: '1.5rem',
@@ -237,7 +309,7 @@ const DashboardPage = () => {
           <Line data={chartData} options={chartOptions} />
         </div>
     </div>
-    </Fragment>
+    </div>
   );
 };
 
