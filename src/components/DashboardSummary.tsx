@@ -75,7 +75,7 @@ const SkeletonCard = () => (
 )
 
 // Componente para o seletor de intervalo de datas funcional
-const DateRangeSelector = ({ startDate, endDate, onChange }) => {
+const DateRangeSelector = ({ startDate, endDate, onChange }: { startDate: Date; endDate: Date; onChange: (update: [Date, Date]) => void }) => {
   return (
     <div style={{
       display: 'inline-flex',
