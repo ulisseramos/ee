@@ -42,6 +42,11 @@ export default function ApiCredentialsManager() {
       return;
     }
     setLoading(true);
+    if (!user) {
+      setError('Usuário não autenticado.');
+      setLoading(false);
+      return;
+    }
     const { error } = await supabase.from('api_credentials').insert([
       { user_id: user.id, provider, api_key: apiKey },
     ]);
