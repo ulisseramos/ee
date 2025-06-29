@@ -9,7 +9,6 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.50.0",
-    "axios": "^1.10.0",
     "chart.js": "^4.5.0",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.519.0",
@@ -21,7 +20,6 @@
     "react-hook-form": "^7.58.1",
     "react-hot-toast": "^2.5.2",
     "react-icons": "^5.5.0",
-    "recharts": "^2.15.4",
     "uuid": "^11.1.0"
   },
   "devDependencies": {

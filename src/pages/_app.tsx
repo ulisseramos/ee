@@ -11,7 +11,7 @@ const inter = Inter({ subsets: ['latin'] });
 function MyApp({ Component, pageProps }: AppProps) {
   const router = useRouter();
 
-  const noLayoutRoutes = ['/login', '/register', '/forgot-password', '/checkout/[id]', '/obrigado', '/rubi'];
+  const noLayoutRoutes = ['/login', '/register', '/forgot-password', '/checkout/[id]', '/obrigado'];
 
   const useLayout = !noLayoutRoutes.some(route => {
     if (route.includes('[id]')) {
