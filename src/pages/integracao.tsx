@@ -3,7 +3,6 @@ import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { Search, Grid, List, CheckCircle, Plus, Layers, Zap, X, Link2, Send } from 'lucide-react';
 // import { sendUtmfyEvent } from '../lib/utmfyWebhook'; // Removido pois não existe mais
-import ApiCredentialsManager from '../components/ApiCredentialsManager';
 
 export default function IntegracaoPage() {
   const { user } = useAuth();
@@ -347,7 +346,6 @@ export default function IntegracaoPage() {
 
         </div>
       </div>
-      <ApiCredentialsManager />
       {/* Drawer de integração */}
       {modal && (
         <>
