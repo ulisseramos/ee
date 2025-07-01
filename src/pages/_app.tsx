@@ -1,5 +1,7 @@
 import type { AppProps } from 'next/app';
 import '../styles/globals.css';
+import '../styles/modal-integracao.css';
+import '../styles/dashboard-mobile.css';
 import { Inter } from 'next/font/google';
 import MainLayout from '../components/MainLayout';
 import { useRouter } from 'next/router';
@@ -10,6 +12,23 @@ const inter = Inter({ subsets: ['latin'] });
 
 function MyApp({ Component, pageProps }: AppProps) {
   const router = useRouter();
+
+  // Importa o CSS da página de login apenas quando necessário
+  if (typeof window !== 'undefined' && router.pathname === '/login') {
+    require('../styles/login.css');
+  }
+  // Importa o CSS da página de checkout apenas quando necessário
+  if (typeof window !== 'undefined' && router.pathname.startsWith('/checkout')) {
+    require('../styles/checkout.css');
+  }
+  // Importa o CSS da página de integrações apenas quando necessário
+  if (typeof window !== 'undefined' && router.pathname === '/integracao') {
+    // require('../styles/integracao.css');
+  }
+  // Importa o CSS da página de cadastro apenas quando necessário
+  if (typeof window !== 'undefined' && router.pathname === '/register') {
+    require('../styles/register.css');
+  }
 
   const noLayoutRoutes = ['/login', '/register', '/forgot-password', '/checkout/[id]', '/obrigado'];
 

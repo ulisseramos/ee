@@ -208,106 +208,106 @@ const DashboardPage = () => {
   };
   
   return (
-    <div style={{
-      width: 'min(90vw, 1700px)',
+    <div className="dashboard-main" style={{
+      width: '100%',
       boxSizing: 'border-box',
       overflowX: 'auto',
-      paddingLeft: 240,
       paddingTop: '2rem',
       minHeight: '100vh',
       background: '#030712',
-      margin: '0 auto',
     }}>
-      {/* Botão Mostrar valores agora vai como children do DashboardSummary */}
-      <DashboardSummary salesData={salesData} showValues={showValues}>
-        <button
-          onClick={() => setShowValues(v => !v)}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 8,
-            background: '#030712',
-            border: '1.5px solid #1A0938',
-            color: '#fff',
-            fontWeight: 700,
-            fontSize: 16,
-            borderRadius: 12,
-            padding: '0.7rem 1.6rem',
-            cursor: 'pointer',
-            boxShadow: '0 2px 8px 0 rgba(0,0,0,0.10)',
-            transition: 'all 0.18s',
-          }}
-        >
-          <FaEye style={{ color: '#a78bfa', fontSize: 18 }} />
-          {showValues ? 'Ocultar valores' : 'Mostrar valores'}
-        </button>
-      </DashboardSummary>
-
       <div style={{
-        marginTop: '2rem',
-        backgroundColor: '#030712',
-        border: '1px solid #1A0938',
-        borderRadius: '0.75rem',
-        padding: '1.5rem',
+        maxWidth: 1400,
+        margin: '0 auto',
+        padding: '0 2rem',
       }}>
+        <DashboardSummary salesData={salesData} showValues={showValues}>
+          <button
+            onClick={() => setShowValues(v => !v)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              background: '#030712',
+              border: '1.5px solid #1A0938',
+              color: '#fff',
+              fontWeight: 700,
+              fontSize: 16,
+              borderRadius: 12,
+              padding: '0.7rem 1.6rem',
+              cursor: 'pointer',
+              boxShadow: '0 2px 8px 0 rgba(0,0,0,0.10)',
+              transition: 'all 0.18s',
+            }}
+          >
+            <FaEye style={{ color: '#a78bfa', fontSize: 18 }} />
+            {showValues ? 'Ocultar valores' : 'Mostrar valores'}
+          </button>
+        </DashboardSummary>
         <div style={{
-          width: '100%',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '1rem',
+          marginTop: '2rem',
+          backgroundColor: '#030712',
+          border: '1px solid #1A0938',
+          borderRadius: '0.75rem',
+          padding: '1.5rem',
         }}>
-          <div>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'white' }}>Visão Geral de Vendas</h2>
-            <p style={{ color: '#A1A1AA', fontSize: '0.875rem' }}>Acompanhe o desempenho das suas vendas ao longo do tempo</p>
+          <div style={{
+            width: '100%',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '1rem',
+          }}>
+            <div>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'white' }}>Visão Geral de Vendas</h2>
+              <p style={{ color: '#A1A1AA', fontSize: '0.875rem' }}>Acompanhe o desempenho das suas vendas ao longo do tempo</p>
+            </div>
+            <div style={{
+              display: 'flex',
+              gap: '0.25rem',
+              border: '1px solid #27272A',
+              borderRadius: '0.5rem',
+              padding: '0.25rem',
+            }}>
+              {['today', '7d', '14d', '30d'].map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setPeriod(p as any)}
+                  style={{
+                    padding: '0.25rem 0.75rem',
+                    borderRadius: '0.375rem',
+                    border: 'none',
+                    background: period === p ? '#27272A' : 'transparent',
+                    color: period === p ? 'white' : '#A1A1AA',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {p === 'today' ? 'Hoje' : `${p.replace('d', '')} dias`}
+                </button>
+              ))}
+            </div>
           </div>
           <div style={{
+            width: '100%',
             display: 'flex',
-            gap: '0.25rem',
-            border: '1px solid #27272A',
-            borderRadius: '0.5rem',
-            padding: '0.25rem',
-          }}>
-            {['today', '7d', '14d', '30d'].map((p) => (
-              <button
-                key={p}
-                onClick={() => setPeriod(p as any)}
-                style={{
-                  padding: '0.25rem 0.75rem',
-                  borderRadius: '0.375rem',
-                  border: 'none',
-                  background: period === p ? '#27272A' : 'transparent',
-                  color: period === p ? 'white' : '#A1A1AA',
-                  cursor: 'pointer'
-                }}
-              >
-                {p === 'today' ? 'Hoje' : `${p.replace('d', '')} dias`}
-              </button>
-            ))}
-          </div>
-        </div>
-        
-        <div style={{ 
-            width: '100%', 
-            display: 'flex', 
             justifyContent: 'flex-end',
             marginBottom: '1rem',
             gap: '1rem'
-        }}>
+          }}>
             <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
-                <div style={{width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#7910CE'}}></div>
-                <span style={{color: '#A1A1AA', fontSize: '0.875rem'}}>Vendas Aprovadas</span>
+              <div style={{width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#7910CE'}}></div>
+              <span style={{color: '#A1A1AA', fontSize: '0.875rem'}}>Vendas Aprovadas</span>
             </div>
             <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
-                <div style={{width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#f59e0b'}}></div>
-                <span style={{color: '#A1A1AA', fontSize: '0.875rem'}}>Vendas Pendentes</span>
+              <div style={{width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#f59e0b'}}></div>
+              <span style={{color: '#A1A1AA', fontSize: '0.875rem'}}>Vendas Pendentes</span>
+            </div>
+          </div>
+          <div style={{ width: '100%', height: '350px' }}>
+            <Line data={chartData} options={chartOptions} />
+          </div>
         </div>
       </div>
-
-        <div style={{ width: '100%', height: '350px' }}>
-          <Line data={chartData} options={chartOptions} />
-        </div>
-    </div>
     </div>
   );
 };

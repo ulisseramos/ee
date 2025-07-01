@@ -3,17 +3,15 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 360px;
   height: 100vh;
+  width: 300px;
   background: #030712;
-  color: #ffffff;
+  border-right: 1.5px solid #1A0938;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.3);
-  z-index: 50;
-  padding: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  z-index: 10;
+  box-shadow: 0 2px 16px #0002;
+  padding: 0 0 0 0;
 }
 
 /* User Section */
@@ -59,12 +57,13 @@
 }
 
 /* Logo Section */
-.logoSection {
+.logoArea {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  padding: 24px 0;
-  background: #030712;
+  justify-content: center;
+  height: 130px;
+  border-bottom: 1.5px solid #1A0938;
+  margin-bottom: 0.5rem;
 }
 
 .logoImage {
@@ -74,21 +73,25 @@
 }
 
 .logoText {
-  font-size: 28px;
+  color: #fff;
+  font-size: 1.35rem;
   font-weight: 800;
-  letter-spacing: -0.025em;
-  background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+  letter-spacing: -1px;
+  text-shadow: 0 2px 8px #0002;
+}
+
+.logoAreaClosed {
+  height: auto;
+  margin-top: 0;
+  padding-top: 0;
 }
 
 /* Navigation Section */
-.navSection {
-  padding: 0 20px;
-  margin-top: 16px;
-  background: #030712;
+.menu {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
 }
 
 .sectionTitle {
@@ -110,44 +113,47 @@
   margin: 0;
 }
 
-.navItem a, .navItem button {
+.link {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 14px 18px;
-  border-radius: 16px;
-  font-size: 16px;
+  gap: 1rem;
+  padding: 0.85rem 1.5rem;
+  color: #a1a1aa;
   font-weight: 500;
-  transition: all 0.3s ease;
-  user-select: none;
-  width: 100%;
-  text-align: left;
-  border: 1px solid transparent;
-  background: #030712;
-  cursor: pointer;
-  color: rgba(255, 255, 255, 0.7);
+  border-radius: 0.6rem;
   text-decoration: none;
+  transition: background 0.18s, color 0.18s;
+  position: relative;
+  font-size: 1.08rem;
 }
 
-.navItem a:hover, .navItem button:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  transform: translateX(8px);
-  border-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+.link:hover {
+  background: #23233a;
+  color: #fff;
 }
 
-.active a {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
-  color: white;
-  border: 1px solid rgba(102, 126, 234, 0.3);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
-  transform: translateX(8px);
+.active {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1.5rem;
+  color: #fff;
+  font-weight: 700;
+  border-radius: 0.4rem;
+  background: #0E0825;
+  border: 1.5px solid #1A0938;
+  text-decoration: none;
+  position: relative;
+  font-size: 1.05rem;
+  box-shadow: none;
+  transition: background 0.18s, border 0.18s;
 }
 
-.active a:hover {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
 }
 
 .disabled a {
@@ -164,37 +170,234 @@
 }
 
 /* Bottom Section */
-.bottomSection {
-  padding: 0 20px;
+.bottomArea {
   margin-top: auto;
-  background: #030712;
+  padding: 1.2rem 0.5rem 1.5rem 0.5rem;
+  border-top: 1.5px solid #1A0938;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.supportButton {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-  color: #f8fafc;
-  font-weight: 600;
-  border: 1px solid rgba(102, 126, 234, 0.2);
+.logoutBtn {
+  display: flex;
+  gap: 0.7rem;
+  background-color: #030712;
+  color: #fff;
+  font-weight: 700;
+  border: #1A0938;
+  border-radius: 0.5rem;
+  padding: 0.8rem 1.5rem;
+  font-size: 1.05rem;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 1px 4px #1A0938;
+  transition: background 0.18s, color 0.18s;
+  align-items: center;
+  justify-content: flex-start;
+  text-decoration: none;
+  border-width: 1.5px;
+  border-style: solid;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 48px;
+  min-width: 48px;
 }
 
-.supportButton:hover {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
-  border-color: rgba(102, 126, 234, 0.4);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+.logoutBtn:hover {
+  background-color: #1A0938;
+  color: #a78bfa;
+  border: #a78bfa;
 }
 
-.logoutButton {
-  color: #ef4444;
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.1) 100%);
-  border: 1px solid rgba(239, 68, 68, 0.2);
+/* Garantir ícone alinhado à esquerda no botão de perfil e sair */
+.logoutBtn .icon {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: auto;
 }
 
-.logoutButton:hover {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.2) 100%);
-  border-color: rgba(239, 68, 68, 0.4);
-  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
+/* Espaçamento extra acima do item Perfil */
+.perfilMenuItem {
+  margin-top: 2.5rem;
 }
 
-.logoutButton > svg {
-  color: #ef4444;
+/* Alinhamento dinâmico para o botão de perfil */
+.perfilAlignLeft {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding-left: 12px !important;
+  padding-right: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  height: 48px !important;
+  gap: 0 !important;
+}
+
+.perfilAlignCenter {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  height: 48px !important;
+}
+
+.logoutBtn.perfilAlignCenter .icon {
+  justify-content: center !important;
+  width: 100%;
+  margin-left: 4px !important;
+}
+
+.logoutAlignLeft {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding-left: 12px !important;
+  padding-right: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  height: 48px !important;
+  gap: 0 !important;
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    width: 70px !important;
+    min-width: 70px !important;
+    max-width: 70px !important;
+    left: 0;
+    z-index: 100;
+    padding: 0 !important;
+    box-shadow: 2px 0 16px #0004;
+  }
+  .logoArea {
+    height: 70px !important;
+    min-height: 70px !important;
+    padding: 0 !important;
+    margin-bottom: 0 !important;
+  }
+  .logoText, .logoImage {
+    font-size: 1.1rem !important;
+    height: 32px !important;
+    margin-bottom: 0 !important;
+  }
+  .link, .active {
+    padding: 0.85rem 0.7rem !important;
+    font-size: 0.98rem !important;
+    justify-content: center !important;
+  }
+  .link span:not(.icon), .active span:not(.icon) {
+    display: none !important;
+  }
+  .bottomArea {
+    padding: 0.7rem 0.2rem 1rem 0.2rem !important;
+  }
+  .logoutBtn {
+    padding: 0.7rem 0.7rem !important;
+    font-size: 0.98rem !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .sidebar {
+    display: none !important;
+  }
+  .mobileNavBar {
+    display: flex !important;
+    position: fixed !important;
+    left: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 64px;
+    background: #181c2a;
+    border-top: 1.5px solid #1A0938;
+    z-index: 10000;
+    justify-content: space-around;
+    align-items: center;
+    box-shadow: 0 -2px 16px #0006;
+  }
+  .mobileNavBar .navIcon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #a1a1aa;
+    font-size: 13px;
+    text-decoration: none;
+    font-weight: 600;
+    gap: 2px;
+    transition: color 0.18s;
+  }
+  .mobileNavBar .navIcon.active {
+    color: #fff;
+  }
+  .mobileNavBar .navIcon svg {
+    font-size: 26px;
+    margin-bottom: 2px;
+  }
+}
+
+.menuClosed {
+  align-items: center;
+  justify-content: flex-start;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  margin-top: 0;
+  padding-top: 8px;
+}
+
+.menuClosed .active {
+  padding: 12px !important;
+  border-radius: 12px !important;
+  width: auto !important;
+  min-width: unset !important;
+  max-width: 56px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #0E0825 !important;
+  box-shadow: none !important;
+}
+
+.menuClosed .active .icon {
+  background: none !important;
+  box-shadow: none !important;
+  padding: 0;
+  max-width: unset;
+  max-height: unset;
+}
+
+/* Forçar o botão de perfil fechado a colar o ícone no canto esquerdo */
+.menuClosed .perfilAlignLeft,
+.menuClosed .perfilAlignLeft > span,
+.menuClosed .perfilAlignLeft .icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  padding-left: 12px !important;
+  box-sizing: border-box !important;
+  height: 48px !important;
+  gap: 0 !important;
 } 
