@@ -64,4 +64,24 @@
   body, html, .dashboard-main {
     overflow-x: hidden !important;
   }
+  .dashboard-summary-header,
+  .dashboard-header {
+    gap: 0.2rem !important;
+    padding: 0 !important;
+  }
+  .dashboard-summary-header button,
+  .dashboard-header button,
+  .dashboard-summary-header .date-range-calendar,
+  .dashboard-header .date-range-calendar {
+    font-size: 0.85rem !important;
+    padding: 0.3rem 0.7rem !important;
+    min-height: 28px !important;
+    height: 28px !important;
+    border-radius: 0.5rem !important;
+  }
+  .dashboard-summary-header svg,
+  .dashboard-header svg {
+    width: 15px !important;
+    height: 15px !important;
+  }
 } 
