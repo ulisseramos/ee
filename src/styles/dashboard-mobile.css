@@ -66,22 +66,41 @@
   }
   .dashboard-summary-header,
   .dashboard-header {
-    gap: 0.2rem !important;
+    gap: 0.1rem !important;
     padding: 0 !important;
+  }
+  .dashboard-summary-header button span,
+  .dashboard-header button span,
+  .dashboard-summary-header .date-range-calendar span,
+  .dashboard-header .date-range-calendar span {
+    display: none !important;
   }
   .dashboard-summary-header button,
   .dashboard-header button,
   .dashboard-summary-header .date-range-calendar,
   .dashboard-header .date-range-calendar {
-    font-size: 0.85rem !important;
-    padding: 0.3rem 0.7rem !important;
-    min-height: 28px !important;
-    height: 28px !important;
-    border-radius: 0.5rem !important;
+    min-width: 32px !important;
+    width: 32px !important;
+    height: 32px !important;
+    padding: 0 !important;
+    justify-content: center !important;
+    align-items: center !important;
+    font-size: 0 !important;
+    overflow: hidden !important;
+  }
+  .dashboard-summary-header button svg,
+  .dashboard-header button svg,
+  .dashboard-summary-header .date-range-calendar svg,
+  .dashboard-header .date-range-calendar svg {
+    width: 18px !important;
+    height: 18px !important;
+    display: inline-block !important;
+    font-size: 18px !important;
   }
   .dashboard-summary-header svg,
   .dashboard-header svg {
-    width: 15px !important;
-    height: 15px !important;
+    width: 18px !important;
+    height: 18px !important;
+    display: inline-block !important;
   }
 } 
