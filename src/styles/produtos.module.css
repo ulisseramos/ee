@@ -1,0 +1,31 @@
+.produtosShiftRight {
+  /* Nenhum padding ou margin para garantir que a página fique totalmente visível */
+}
+
+@media (max-width: 600px) {
+  .produtosShiftRight {
+    margin-left: 0 !important;
+    padding: 0 8px !important;
+    width: 100vw !important;
+    box-sizing: border-box !important;
+  }
+  .productCard, .card {
+    width: 100% !important;
+    min-width: 0 !important;
+    border-radius: 18px !important;
+    font-size: 1.08rem !important;
+    margin-bottom: 18px !important;
+    padding: 18px 12px !important;
+  }
+  .productTitle {
+    font-size: 1.15rem !important;
+    font-weight: 700 !important;
+  }
+  .productButton, .btn-primary {
+    width: 100% !important;
+    font-size: 1.08rem !important;
+    padding: 14px 0 !important;
+    border-radius: 12px !important;
+    margin-top: 10px !important;
+  }
+} 

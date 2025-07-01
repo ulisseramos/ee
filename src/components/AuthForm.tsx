@@ -3,7 +3,12 @@ import { supabase } from '../lib/supabaseClient';
 import { useRouter } from 'next/router';
 import { FiMail, FiLock } from 'react-icons/fi';
 
-export default function AuthForm({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
+type Props = {
+  mode: 'login' | 'register' | 'forgot';
+  variant?: 'login' | 'register';
+};
+
+export default function AuthForm({ mode, variant = 'login' }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -36,47 +41,49 @@ export default function AuthForm({ mode }: { mode: 'login' | 'register' | 'forgo
   };
 
   return (
-    <div className="animate-fade-in">
-      <form onSubmit={handleSubmit} className="card-glass w-full max-w-md mx-auto">
+    <div>
+      <form onSubmit={handleSubmit} className="w-full">
         <div className="text-center mb-8">
-          <h2 className="heading-1 text-gradient">
+          <h2 className={variant === 'register' ? 'register-title' : 'login-title'}>
             {mode === 'login' && 'Bem-vindo de volta!'}
             {mode === 'register' && 'Crie sua conta'}
             {mode === 'forgot' && 'Recuperar Senha'}
           </h2>
-          <p className="text-gray-300 mt-2">
+          <p className={variant === 'register' ? 'register-desc' : 'login-desc'}>
             {mode === 'login' && 'Entre com suas credenciais para acessar sua conta'}
             {mode === 'register' && 'Preencha os dados para criar sua conta'}
             {mode === 'forgot' && 'Digite seu email para recuperar a senha'}
           </p>
         </div>
 
-        <div className="space-y-6">
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-              <FiMail size={20} />
+        <div>
+          <div style={{ position: 'relative' }}>
+            <span style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#6366f1' }}>
+              <FiMail size={22} />
             </span>
             <input
               type="email"
               placeholder="Email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              className="input-modern pl-12"
+              className={variant === 'register' ? 'register-input' : 'login-input'}
+              style={{ paddingLeft: 44 }}
               required
             />
           </div>
 
           {mode !== 'forgot' && (
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                <FiLock size={20} />
+            <div style={{ position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#6366f1' }}>
+                <FiLock size={22} />
               </span>
               <input
                 type="password"
                 placeholder="Senha"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="input-modern pl-12"
+                className={variant === 'register' ? 'register-input' : 'login-input'}
+                style={{ paddingLeft: 44 }}
                 required
               />
             </div>
@@ -84,12 +91,12 @@ export default function AuthForm({ mode }: { mode: 'login' | 'register' | 'forgo
 
           <button
             type="submit"
-            className="btn-primary w-full text-lg py-4"
+            className={variant === 'register' ? 'register-btn' : 'login-btn'}
             disabled={loading}
           >
             {loading ? (
-              <div className="flex items-center justify-center gap-2">
-                <div className="loading-spinner w-5 h-5"></div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <div className="loading-spinner" style={{ width: 20, height: 20 }}></div>
                 Aguarde...
               </div>
             ) : (
@@ -100,39 +107,25 @@ export default function AuthForm({ mode }: { mode: 'login' | 'register' | 'forgo
           </button>
 
           {message && (
-            <div className={`mt-4 text-center text-sm font-medium p-3 rounded-xl ${
-              message.includes('Erro') || message.includes('error') 
-                ? 'bg-red-500/20 text-red-300 border border-red-500/30' 
-                : 'bg-green-500/20 text-green-300 border border-green-500/30'
-            }`}>
+            <div className={`${variant === 'register' ? 'register-message' : 'login-message'} ${message.includes('Erro') || message.includes('error') ? 'error' : 'success'}`}>
               {message}
             </div>
           )}
         </div>
 
-        <div className="mt-8 text-center">
-          <div className="space-y-3">
-            {mode === 'login' && (
-              <>
-                <a href="/register" className="btn-outline block w-full">
-                  Criar nova conta
-                </a>
-                <a href="/forgot-password" className="text-blue-400 hover:text-blue-300 transition-colors font-medium">
-                  Esqueci minha senha
-                </a>
-              </>
-            )}
-            {mode === 'register' && (
-              <a href="/login" className="text-blue-400 hover:text-blue-300 transition-colors font-medium">
-                Já tenho uma conta? Entrar
-              </a>
-            )}
-            {mode === 'forgot' && (
-              <a href="/login" className="text-blue-400 hover:text-blue-300 transition-colors font-medium">
-                Voltar ao login
-              </a>
-            )}
-          </div>
+        <div className={variant === 'register' ? 'register-links' : 'login-links'}>
+          {mode === 'login' && (
+            <>
+              <a href="/register" className="login-link">Criar nova conta</a>
+              <a href="/forgot-password" className="login-link">Esqueci minha senha</a>
+            </>
+          )}
+          {mode === 'register' && (
+            <a href="/login" className="register-link">Já tenho uma conta? Entrar</a>
+          )}
+          {mode === 'forgot' && (
+            <a href="/login" className="login-link">Voltar ao login</a>
+          )}
         </div>
       </form>
     </div>

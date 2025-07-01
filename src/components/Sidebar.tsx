@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { supabase } from '../lib/supabaseClient';
@@ -9,54 +9,48 @@ import {
   Plug, 
   User, 
   Power,
-  Zap
+  Zap,
+  CreditCard,
+  LogOut,
+  Send,
+  Menu,
+  ChevronLeft
 } from 'lucide-react';
+import styles from './Sidebar.module.css';
 
-const navItems = [
-  { href: '/dashboard', label: 'Visão Geral', icon: LayoutDashboard },
-  { href: '/produtos', label: 'Produtos', icon: ShoppingBag },
-  { href: '/relatorio', label: 'Análises', icon: BarChart2 },
-  { href: '/integracao', label: 'Conexões', icon: Plug },
+const menu = [
+  { label: 'Dashboard', href: '/dashboard', icon: (size) => <LayoutDashboard size={size} /> },
+  { label: 'Produtos', href: '/produtos', icon: (size) => <ShoppingBag size={size} /> },
+  { label: 'Checkout', href: '/checkout/123', icon: (size) => <CreditCard size={size} /> },
+  { label: 'Relatórios', href: '/relatorio', icon: (size) => <BarChart2 size={size} /> },
+  { label: 'Integrações', href: '/integracao', icon: (size) => <Plug size={size} /> },
+  { label: 'Perfil', href: '/perfil', icon: (size) => <User size={size} /> },
 ];
 
-const NavLink = ({ href, label, icon: Icon }) => {
+const NavLink = ({ href, label, icon: Icon, className }) => {
   const router = useRouter();
   const isActive = router.pathname === href;
 
   return (
     <Link href={href} passHref legacyBehavior>
-      <a style={{
-        display: 'flex',
-        alignItems: 'center',
-        padding: '0.75rem 1.5rem',
-        margin: '0.25rem 0',
-        borderRadius: '0.5rem',
-        color: isActive ? 'white' : '#A1A1AA',
-        backgroundColor: isActive ? 'rgba(126, 34, 206, 0.2)' : 'transparent',
-        fontWeight: isActive ? '600' : '400',
-        position: 'relative',
-        transition: 'all 0.2s ease-in-out',
-        textDecoration: 'none',
-      }}>
-        {isActive && (
-          <span style={{
-            position: 'absolute',
-            left: '0',
-            top: '25%',
-            bottom: '25%',
-            width: '4px',
-            backgroundColor: '#7E22CE',
-            borderRadius: '0 9999px 9999px 0',
-          }}></span>
-        )}
-        <Icon size={28} color={isActive ? '#fff' : '#A1A1AA'} style={{ marginRight: '1rem' }} />
+      <a className={
+        className
+          ? `${className} ${router.pathname.startsWith(href.replace('/123','')) ? styles.active : styles.link}`
+          : router.pathname.startsWith(href.replace('/123','')) ? styles.active : styles.link
+      }>
+        <span className={styles.icon}>{Icon}</span>
         <span>{label}</span>
       </a>
     </Link>
   );
 };
 
-const Sidebar = () => {
+export interface SidebarProps {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+}
+
+const Sidebar = ({ open, setOpen }: SidebarProps) => {
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -64,67 +58,95 @@ const Sidebar = () => {
     router.push('/login');
   };
 
+  // Responsivo: mostrar barra inferior no mobile
+  useEffect(() => {
+    // Remove scroll do body quando mobileNavBar está visível
+    const handleResize = () => {
+      if (window.innerWidth <= 600) {
+        document.body.style.paddingBottom = '64px';
+      } else {
+        document.body.style.paddingBottom = '';
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    handleResize();
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
-    <aside style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      height: '100vh',
-      zIndex: 1100,
-      width: 240,
-      backgroundColor: '#030712',
-      borderRight: '1px solid #0E0725',
-      display: 'flex',
-      flexDirection: 'column',
-      padding: '2rem 1.5rem'
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', padding: '0 0.5rem 1.5rem 0.5rem' }}>
-        <div style={{
-          width: '40px',
-          height: '40px',
-          backgroundColor: '#7E22CE',
-          borderRadius: '0.5rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginRight: '0.75rem'
-        }}>
-          <Zap size={24} color="white" />
+    <>
+      <aside
+        className={styles.sidebar}
+        style={{ width: open ? 300 : 96, transition: 'width 0.2s' }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '8px 16px 0 16px' }}>
+          <div className={`${styles.logoArea} ${!open ? styles.logoAreaClosed : ''}`} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: 8, width: '100%' }}>
+            <img
+              src={open ? "https://i.imgur.com/UUAV9T6.png" : "https://i.imgur.com/RGrHARN.png"}
+              alt="Logo"
+              style={open
+                ? { height: 450, maxWidth: '100%', objectFit: 'contain', width: 'auto', display: 'block', filter: 'drop-shadow(0 2px 8px #0004)' }
+                : { height: 220, width: '100%', maxWidth: '100%', objectFit: 'contain', display: 'block', filter: 'drop-shadow(0 2px 8px #0004)' }
+              }
+            />
+          </div>
         </div>
-        <span style={{ color: 'white', fontSize: '1.25rem', fontWeight: 'bold' }}>MeuPainel</span>
-      </div>
-
-      <nav style={{ flexGrow: 1 }}>
-        {navItems.map(item => (
-          <NavLink key={item.href} {...item} />
-        ))}
-      </nav>
-
-      <div style={{
-        position: 'absolute',
-        left: 0,
-        bottom: 80,
-        width: '100%',
-        background: 'inherit',
-        zIndex: 1200,
-        padding: 0,
-      }}>
-        <div style={{ borderTop: '1px solid #0E0725', margin: '0.5rem 0' }}></div>
-        <NavLink href="/perfil" label="Minha Conta" icon={User} />
-        <a onClick={handleLogout} style={{
-          display: 'flex',
-          alignItems: 'center',
-          padding: '0.75rem 1.5rem',
-          margin: '0.25rem 0',
-          borderRadius: '0.5rem',
-          color: '#A1A1AA',
-          cursor: 'pointer'
-        }}>
-          <Power size={20} style={{ marginRight: '1rem' }} />
-          <span>Sair</span>
+        <nav className={`${styles.menu} ${!open ? styles.menuClosed : ''}`} style={{ marginLeft: open ? 0 : 0, marginTop: 8 }}>
+          {menu.filter(item => item.label !== 'Perfil').map(item => (
+            <NavLink key={item.href} href={item.href} label={open ? item.label : ''} icon={item.icon(open ? 22 : 28)} className={styles.link} />
+          ))}
+        </nav>
+        <div className={styles.bottomArea}>
+          <button
+            onClick={() => setOpen(o => !o)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#a78bfa',
+              cursor: 'pointer',
+              padding: 8,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: open ? 'flex-end' : 'flex-start',
+              width: '100%',
+              marginBottom: 8
+            }}
+            aria-label={open ? 'Fechar menu' : 'Abrir menu'}
+          >
+            {open ? <ChevronLeft size={28} /> : <Menu size={28} />}
+          </button>
+          <NavLink
+            href={menu.find(item => item.label === 'Perfil')?.href || '/perfil'}
+            label={open ? (<><User size={20} style={{marginRight: 8}} />Perfil</>) : <User size={20} />}
+            icon={menu.find(item => item.label === 'Perfil')?.icon}
+            className={open ? styles.logoutBtn : `${styles.logoutBtn} ${styles.perfilAlignLeft}`}
+          />
+          <button className={open ? styles.logoutBtn : `${styles.logoutBtn} ${styles.logoutAlignLeft}`} onClick={handleLogout} style={{ width: '100%' }}>
+            <LogOut size={20} />
+            {open && <span>Sair</span>}
+          </button>
+        </div>
+      </aside>
+      {/* Barra de navegação inferior para mobile */}
+      <nav className={styles.mobileNavBar} style={{ display: 'none' }}>
+        <a href="/dashboard" className={router.pathname === '/dashboard' ? `${styles.navIcon} ${styles.active}` : styles.navIcon}>
+          <LayoutDashboard size={26} />
+          <span>Dashboard</span>
         </a>
-      </div>
-    </aside>
+        <a href="/relatorio" className={router.pathname === '/relatorio' ? `${styles.navIcon} ${styles.active}` : styles.navIcon}>
+          <BarChart2 size={26} />
+          <span>Relatórios</span>
+        </a>
+        <a href="/perfil" className={router.pathname === '/perfil' ? `${styles.navIcon} ${styles.active}` : styles.navIcon}>
+          <User size={26} />
+          <span>Perfil</span>
+        </a>
+        <button onClick={handleLogout} className={styles.navIcon} style={{ background: 'none', border: 'none', padding: 0, margin: 0, cursor: 'pointer' }}>
+          <LogOut size={26} />
+          <span>Sair</span>
+        </button>
+      </nav>
+    </>
   );
 };
 

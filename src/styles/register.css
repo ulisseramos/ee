@@ -1,0 +1,115 @@
+/* Estilos dedicados para a página de cadastro (register) - igual ao login.css */
+
+body.register-page {
+  min-height: 100vh;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(120deg, #181c2a 0%, #23233a 100%);
+  font-family: 'Inter', Arial, sans-serif;
+}
+
+.register-container {
+  background: #10121b;
+  border-radius: 18px;
+  box-shadow: 0 8px 32px #0006;
+  border: 1.5px solid #23233a;
+  padding: 2.5rem 2rem;
+  max-width: 400px;
+  width: 100%;
+  margin: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.register-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #f8fafc;
+  text-align: center;
+  margin-bottom: 0.5rem;
+  letter-spacing: -1px;
+  text-shadow: 0 2px 8px #0002;
+}
+
+.register-desc {
+  color: #a1a1aa;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.register-input {
+  width: 85%;
+  padding: 0.9rem 1.1rem;
+  border: 1.5px solid #7c3aed;
+  border-radius: 10px;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  outline: none;
+  transition: border 0.2s, background 0.2s;
+  background: #181c2a;
+  color: #f8fafc;
+  box-shadow: 0 2px 8px #7c3aed11;
+}
+.register-input:focus {
+  border-color: #a78bfa;
+  background: #23233a;
+  color: #fff;
+}
+
+.register-btn {
+  width: 100%;
+  padding: 0.9rem 1.1rem;
+  background: linear-gradient(90deg, #7c3aed 0%, #6366f1 100%);
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 2px 12px #7c3aed22;
+  transition: background 0.2s, transform 0.2s;
+  margin-top: 0.5rem;
+}
+.register-btn:hover {
+  background: linear-gradient(90deg, #a78bfa 0%, #7c3aed 100%);
+  transform: translateY(-2px) scale(1.03);
+}
+
+.register-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  margin-top: 1.2rem;
+  text-align: center;
+}
+.register-link {
+  color: #a78bfa;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+.register-link:hover {
+  color: #7c3aed;
+}
+
+.register-message {
+  margin-top: 1rem;
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  font-size: 0.98rem;
+  text-align: center;
+  font-weight: 500;
+}
+.register-message.error {
+  background: #2e1732;
+  color: #f87171;
+  border: 1.5px solid #7c3aed44;
+}
+.register-message.success {
+  background: #162e2a;
+  color: #34d399;
+  border: 1.5px solid #7c3aed44;
+} 

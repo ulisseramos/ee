@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '../../context/AuthContext';
+import { FiUser, FiMail, FiPhone, FiArrowLeft, FiCheckCircle, FiStar } from 'react-icons/fi';
+import { QRCodeCanvas } from 'qrcode.react';
 
 declare global {
   interface Window {
@@ -27,6 +29,8 @@ export default function CheckoutPage() {
   const [checking, setChecking] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [pixelId, setPixelId] = useState<string | null>(null);
+  const [pixCode, setPixCode] = useState<string | null>(null);
+  const [bannerUrl, setBannerUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -65,18 +69,6 @@ export default function CheckoutPage() {
 
         // 2. Buscar as integrações do dono do produto
         if (productData.user_id) {
-          // Buscar API Key
-          const { data: integrationData } = await supabase
-            .from('integrations')
-            .select('pushinpay_api_key')
-            .eq('user_id', productData.user_id)
-            .eq('provider', 'pushinpay')
-            .single();
-          
-          if (integrationData?.pushinpay_api_key) {
-            setApiKey(integrationData.pushinpay_api_key);
-          }
-
           // Buscar Pixel ID
           const { data: pixelData } = await supabase
             .from('integrations')
@@ -120,22 +112,32 @@ export default function CheckoutPage() {
     window.fbq('track', 'InitiateCheckout', { currency: 'BRL', value });
   }, [pixelId, product]);
 
+  useEffect(() => {
+    document.body.classList.add('checkout-page');
+    return () => document.body.classList.remove('checkout-page');
+  }, []);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Novo: função unificada para enviar e pagar
+  const handleSubmitAndPay = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setFormError('');
     setFormSuccess('');
     if (!form.nome || !form.email || !form.telefone) {
       setFormError('Preencha todos os campos!');
       return;
     }
-
+    // Se já existe logId, só paga
+    if (logId) {
+      await handlePagar();
+      return;
+    }
+    // Envia formulário e depois paga
     const clientGeneratedId = uuidv4();
     setLogId(clientGeneratedId);
-
     const { data: inserted, error } = await supabase
       .from('checkout_logs')
       .insert({
@@ -153,28 +155,31 @@ export default function CheckoutPage() {
       })
       .select()
       .single();
-
     if (error) {
-      console.error("Erro ao inserir log de checkout:", error);
       setFormError('Erro ao registrar checkout.');
       return;
     }
-
     setStatus('pendente');
-    setFormSuccess('Dados enviados! Agora clique em Pagar para finalizar.');
+    setFormSuccess('Dados enviados! Gerando pagamento...');
+    await handlePagar(clientGeneratedId);
   };
 
-  const handlePagar = async () => {
-    if (!logId || !apiKey) {
+  // Adaptar handlePagar para aceitar logId opcional
+  const handlePagar = async (customLogId?: string) => {
+    const useLogId = customLogId || logId;
+    if (!useLogId) {
+      setFormError('Preencha e envie o formulário antes de pagar!');
+      return;
+    }
+    if (!apiKey) {
       setFormError('Chave de API não encontrada.');
       return;
     }
     setFormError('');
     setFormSuccess('');
     setChecking(true);
-    // Chama API PushinPay
     try {
-      const value = Math.round(Number(product.price) * 100); // valor em centavos
+      const value = Math.round(Number(product.price) * 100);
       if (!value || isNaN(value) || value <= 0) {
         setFormError('Valor do produto inválido.');
         setChecking(false);
@@ -193,27 +198,25 @@ export default function CheckoutPage() {
         })
       });
       const data = await res.json();
+      console.log('PushinPay response:', data);
       if (!res.ok) {
         setFormError(data.error || data.message || JSON.stringify(data) || 'Erro ao gerar cobrança.');
         setChecking(false);
         return;
       }
-      if (data.id && data.qr_code_base64) {
-        setQrCode(data.qr_code_base64);
+      if (data.id && data.qr_code) {
+        setPixCode(data.qr_code);
+        setFormSuccess('Pagamento gerado! Copie o código Pix abaixo e pague no seu banco.');
         setTransId(data.id);
-        setFormSuccess('Pagamento gerado! Escaneie o QR Code para pagar.');
-        // Atualiza log com id da transação (status ainda pendente)
-        if (!logId || typeof logId !== 'string' || logId.length < 10) {
+        if (!useLogId || typeof useLogId !== 'string' || useLogId.length < 10) {
           setFormError('Erro interno: logId inválido.');
           setChecking(false);
           return;
         }
-        console.log('Atualizando checkout_logs (pendente):', { logId, status: 'pendente', transaction_id: data.id });
         await supabase.from('checkout_logs').update({ 
           status: 'pendente', 
           transaction_id: data.id 
-        }).eq('log_id', logId);
-        // Começa a checar status
+        }).eq('log_id', useLogId);
         checkStatus(data.id);
       } else {
         setFormError('Erro ao gerar cobrança.');
@@ -242,31 +245,15 @@ export default function CheckoutPage() {
         setStatus('aprovado');
         setFormSuccess('Pagamento aprovado!');
         
-        const { error: updateError } = await supabase
+        const { error: updateError, data: updatedLog } = await supabase
           .from('checkout_logs')
           .update({ status: 'approved', updated_at: new Date().toISOString() })
-          .eq('log_id', logId);
+          .eq('log_id', logId)
+          .select()
+          .single();
 
         if (updateError) {
           console.error("Erro ao aprovar o log de checkout:", updateError);
-        }
-        
-        try {
-          console.log(`[Checkout] Pagamento aprovado. Chamando API para finalizar a venda com logId: ${logId}`);
-          const apiRes = await fetch('/api/approve-payment', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ logId }),
-          });
-
-          if (!apiRes.ok) {
-            const errorData = await apiRes.json();
-            console.error('[Checkout] Erro ao chamar a API de aprovação:', errorData);
-          } else {
-            console.log('[Checkout] API de aprovação respondeu com sucesso.');
-          }
-        } catch (error) {
-          console.error('[Checkout] Falha catastrófica ao chamar a API de aprovação:', error);
         }
         
         clearInterval(interval);
@@ -278,43 +265,102 @@ export default function CheckoutPage() {
     }, 3000);
   };
 
+  // Timer para banner
+  function Timer() {
+    const [time, setTime] = useState(7 * 60 + 46); // 7min 46s
+    useEffect(() => {
+      if (time <= 0) return;
+      const interval = setInterval(() => setTime(t => t - 1), 1000);
+      return () => clearInterval(interval);
+    }, [time]);
+    const min = String(Math.floor(time / 60)).padStart(2, '0');
+    const sec = String(time % 60).padStart(2, '0');
+    return (
+      <div className="checkout-timer">
+        <div className="checkout-timer-box">0<br/><span className="checkout-timer-label">HORAS</span></div>
+        <div className="checkout-timer-box">{min}<br/><span className="checkout-timer-label">MIN</span></div>
+        <div className="checkout-timer-box">{sec}<br/><span className="checkout-timer-label">SEG</span></div>
+      </div>
+    );
+  }
+
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center bg-gray-100">Carregando...</div>;
+    return <div className="checkout-loading"><div className="checkout-spinner"></div>Carregando...</div>;
   }
 
   if (!product) {
-    return <div className="min-h-screen flex items-center justify-center bg-gray-100">Produto não encontrado.</div>;
+    return <div className="checkout-loading">Produto não encontrado.</div>;
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded shadow-md text-center max-w-md w-full">
-        <h1 className="text-2xl font-bold mb-4">Checkout do Produto</h1>
+    <div className="checkout-container">
+      {/* Banner customizável */}
+      {bannerUrl && (
+        <div className="checkout-banner-image" style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
+          <img src={bannerUrl} alt="Banner do Checkout" style={{ maxWidth: 380, width: '100%', borderRadius: 14, boxShadow: '0 2px 16px #0002' }} />
+        </div>
+      )}
+      {/* Banner/topo com timer */}
+      <div className="checkout-banner">
+        Oferta por Tempo Limitado!
+        <Timer />
+      </div>
+      {/* Cartão do produto */}
+      <div className="checkout-card checkout-card-pro">
         {product.imagem_url && (
-          <img src={product.imagem_url} alt={product.name} className="mx-auto mb-4 max-h-40 rounded" />
+          <img src={product.imagem_url} alt={product.name} className="checkout-product-img" />
         )}
-        <div className="mb-2 text-xl font-semibold">{product.name}</div>
-        <div className="mb-2 text-green-700 text-lg">R$ {product.price}</div>
-        <div className="mb-4 text-gray-600">{product.description}</div>
-        <form onSubmit={handleSubmit} className="mb-4 text-left">
-          <label className="block mb-2 font-medium">Nome</label>
-          <input name="nome" value={form.nome} onChange={handleChange} className="w-full mb-3 p-2 border rounded" required />
-          <label className="block mb-2 font-medium">Email</label>
-          <input name="email" type="email" value={form.email} onChange={handleChange} className="w-full mb-3 p-2 border rounded" required />
-          <label className="block mb-2 font-medium">Telefone</label>
-          <input name="telefone" value={form.telefone} onChange={handleChange} className="w-full mb-3 p-2 border rounded" required />
-          {formError && <div className="text-red-600 mb-2">{formError}</div>}
-          {formSuccess && <div className="text-green-600 mb-2">{formSuccess}</div>}
-          <button type="submit" className="bg-green-600 text-white px-6 py-2 rounded font-bold text-lg w-full" disabled={!!logId}>Enviar dados</button>
-        </form>
-        <button onClick={handlePagar} className="bg-blue-600 text-white px-6 py-2 rounded font-bold text-lg w-full mb-2" disabled={!logId || status === 'aprovado' || checking}>Pagar</button>
-        {qrCode && (
-          <div className="mt-4">
-            <div className="mb-2 font-semibold">Escaneie o QR Code para pagar:</div>
-            <img src={qrCode} alt="QR Code PIX" className="mx-auto" />
+        <div className="checkout-title">{product.name}</div>
+        {/* Upsell */}
+        <div className="checkout-upsell">
+          <div className="checkout-upsell-title"><FiStar color="#facc15" /> Você também pode gostar de:</div>
+          <div className="checkout-upsell-product">
+            <div style={{fontWeight:600}}>Produto Extra</div>
+            <div style={{fontSize:'0.97rem',color:'#444'}}>Um produto voltando para voce consguir da capa em seus inimigos</div>
+            <div style={{color:'#22c55e',fontWeight:700,marginTop:4}}>+ R$ 12,00</div>
+            <div style={{color:'#22c55e',fontWeight:700,marginTop:2}}>+ R$ 12,00</div>
+            <div style={{marginTop:6}}><input type="checkbox" className="checkout-upsell-checkbox"/> Quero comprar também!</div>
+          </div>
+        </div>
+        {/* Resumo do pedido */}
+        <div className="checkout-summary">
+          <div className="checkout-summary-row"><span>teste</span><span style={{color:'#22c55e'}}>+R$ 12,00</span></div>
+          <div className="checkout-summary-total"><span>Total</span><span>R$ 12,00</span></div>
+        </div>
+      </div>
+      {/* Formulário e pagamento */}
+      <div className="checkout-form-card checkout-form-card-pro">
+        <div className="checkout-form-title">Preencha suas informações pra envio do produto.</div>
+        <input name="email" type="email" value={form.email} onChange={handleChange} className="checkout-input checkout-input-pro" placeholder="Digite seu e-mail" required />
+        <input name="nome" value={form.nome} onChange={handleChange} className="checkout-input checkout-input-pro" placeholder="Digite seu nome completo" required />
+        <input name="telefone" value={form.telefone} onChange={handleChange} className="checkout-input checkout-input-pro" placeholder="Digite seu telefone/WhatsApp" required />
+        <div className="checkout-form-title" style={{marginTop:12,marginBottom:6}}>Formas de pagamento</div>
+        <div className="checkout-payment-box checkout-payment-box-pro">
+          <span style={{fontSize:'1.2em',marginRight:8}}>⚡</span> Pix
+        </div>
+        {formError && <div className="checkout-message error checkout-message-pro">{formError}</div>}
+        {formSuccess && <div className="checkout-message success checkout-message-pro"><FiCheckCircle style={{marginRight: 6}} /> {formSuccess}</div>}
+        <button onClick={handleSubmitAndPay} className="checkout-btn checkout-btn-pro" disabled={checking}>{checking ? 'Processando...' : 'Pagar agora'}</button>
+        {pixCode && (
+          <div className="checkout-qrcode checkout-qrcode-pro">
+            <div className="checkout-qrcode-label">Escaneie o QR Code ou copie o Pix:</div>
+            <QRCodeCanvas value={pixCode} size={180} bgColor="#fff" fgColor="#2563eb" style={{marginBottom: 12, borderRadius: 12, boxShadow: '0 2px 12px #2563eb22'}} />
+            <textarea
+              className="checkout-pix-code checkout-pix-code-pro"
+              value={pixCode}
+              readOnly
+              style={{ width: '100%', minHeight: 60, borderRadius: 8, padding: 8, fontSize: 14, marginBottom: 8 }}
+            />
+            <button
+              className="checkout-btn checkout-btn-copy"
+              style={{ marginTop: 8, background: '#22c55e', color: '#111', fontWeight: 700 }}
+              onClick={() => { navigator.clipboard.writeText(pixCode); setFormSuccess('Código Pix copiado!'); }}
+              type="button"
+            >
+              Copiar código Pix
+            </button>
           </div>
         )}
-        <button onClick={() => router.back()} className="mt-2 bg-gray-300 text-gray-800 px-4 py-2 rounded w-full">Voltar</button>
       </div>
     </div>
   );
