@@ -98,7 +98,7 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
         </nav>
         <div className={styles.bottomArea}>
           <button
-            onClick={() => setOpen(o => !o)}
+            onClick={() => setOpen(!open)}
             style={{
               background: 'none',
               border: 'none',
